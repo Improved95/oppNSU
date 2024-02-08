@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#define M_PI 3.14159265358979323846
 
-#define N 10
-static const double epsilon = 1 / 10 * 10 * 10 * 10 * 10;
+#define PI 3.14159265358979323846
+#define N 3
 
 // Ax = b
 
@@ -17,38 +16,54 @@ void printMatrix(double *matrix) {
 	}
 }
 
-void setMatrix(double *matrix) {
-	for (size_t i = 0; i < N * N; ++i) {
-		matrix[i] = 1.0;
-	}
-	for (size_t i = 0; i < N * N; i += N + 1) {
-		matrix[i] = 2.0;
- 	}
-}
-
-void setVectorU(double *vector) {
+void printVector(double *vector) {
 	for (size_t i = 0; i < N; ++i) {
-		vector[i] = sin((2 * M_PI * i) / N);
+		printf("%f ", vector[i]);
 	}
+	printf("\n");
 }
 
-int charIsAchieve() {
-	return 1;
-}
+// for (size_t i = 0; i < N; i++) {
+    //     for (size_t k = 0; k < N; k++) {
+    //         for (size_t j = 0; j < N; j++) {
+    //             temp[i][j] += (*this)[i][k] * source[k][j];
+	// 		}
+    //     }
+    // }
 
 int main() {
-	double *matrix = malloc(N * N * sizeof(double));
-	double *vectorA = calloc(sizeof(double), N);
-	double *vectorB = calloc(sizeof(double), N);
-	double *vectorU = calloc(sizeof(double), N);
+	static const double epsilon = 1 / 10 * 10 * 10 * 10 * 10;
 
-	setMatrix(matrix);
-	setVectorU(vectorU);
+	double *matrixA = malloc(N * N * sizeof(double));
+	for (size_t i = 0; i < N * N; ++i) {
+		matrixA[i] = 1.0;
+	}
+	for (size_t i = 0; i < N * N; i += N + 1) {
+		matrixA[i] = 2.0;
+ 	}
+
+	double *vectorU = calloc(sizeof(double), N);
+	for (size_t i = 0; i < N; ++i) {
+		vectorU[i] = sin((2 * PI * i) / N);
+	}
+
+	double *vectorX = calloc(sizeof(double), N);
+	double *vectorB = calloc(sizeof(double), N);
+
+	for (size_t i = 0; i < N; ++i) {
+		for (size_t j = 0; j < N; ++j) {
+			vectorB[j] += matrixA[i * N + j] * vectorU[j];
+		}
+	}
+
 	
 
-	while (!charIsAchieve()) {
+	// printMatrix(matrixA);
+	// printVector(vectorU);
+	// printVector(vectorA);
+	// printVector(vectorB);
 
-	}
+
 
 	return 0;
 }
