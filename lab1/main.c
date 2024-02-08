@@ -50,20 +50,44 @@ int main() {
 	double *vectorX = calloc(sizeof(double), N);
 	double *vectorB = calloc(sizeof(double), N);
 
+	double *vectorE = calloc(sizeof(double), N); // for check less epsilon
+
+	//take vector b
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
 			vectorB[j] += matrixA[i * N + j] * vectorU[j];
 		}
 	}
 
-	
+	while(1) {
+		for (size_t i = 0; i < N; ++i) {
+			vectorE[i] = 0;
+			for (size_t j = 0; j < N; ++j) {
+				vectorE[j] += matrixA[i * N + j] * vectorU[j];
+			}
+		}
+		for (size_t i = 0; i < N; ++i) {
+			vectorE[i] -= vectorB[i];
+		}
+		double numerator = 0, denominator = 0;
+		for (size_t i = 0; i < N; ++i) {
+			numerator += pow(vectorE[i], 2);
+			denominator += pow(vectorB[i], 2);
+		}
+		numerator = sqrt(numerator);
+		denominator = sqrt(denominator);
+		if (numerator / denominator < epsilon) {
+			break;
+		}
+
+		 
+
+	}
 
 	// printMatrix(matrixA);
 	// printVector(vectorU);
 	// printVector(vectorA);
 	// printVector(vectorB);
-
-
 
 	return 0;
 }
