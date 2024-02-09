@@ -31,6 +31,18 @@ void printVector(double *vector) {
     //     }
     // }
 
+void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) {
+	for (size_t i = 0; i < N; ++i) {
+		for (size_t j = 0; j < N; ++j) {
+			outputVector[j] += matrix[i * N + j] * inputVector[j];
+		}
+	}
+}
+
+void mulVectorVector(double *vector1, double *vector2) {
+	
+}
+
 int main() {
 	static const double epsilon = 1 / 10 * 10 * 10 * 10 * 10;
 
@@ -53,11 +65,7 @@ int main() {
 	double *vectorE = calloc(sizeof(double), N); // for check less epsilon
 
 	//take vector b
-	for (size_t i = 0; i < N; ++i) {
-		for (size_t j = 0; j < N; ++j) {
-			vectorB[j] += matrixA[i * N + j] * vectorU[j];
-		}
-	}
+	mulMatrixVector(matrixA, vectorU, vectorB);
 
 	while(1) {
 		for (size_t i = 0; i < N; ++i) {
