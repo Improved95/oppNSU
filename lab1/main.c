@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #define PI 3.14159265358979323846
@@ -31,6 +32,16 @@ void printVector(double *vector) {
     //     }
     // }
 
+void setZeroVector(double *vector) {
+	memset(vector, N, sizeof(double));
+}
+
+void subVector(double *vector1, double *vector2) {
+	for (size_t i = 0; i < N; ++i) {
+		vector1[i] -= vector2[i];
+	} 
+}
+
 void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) {
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
@@ -40,7 +51,7 @@ void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) 
 }
 
 void mulVectorVector(double *vector1, double *vector2) {
-	
+
 }
 
 int main() {
@@ -68,28 +79,23 @@ int main() {
 	mulMatrixVector(matrixA, vectorU, vectorB);
 
 	while(1) {
-		for (size_t i = 0; i < N; ++i) {
-			vectorE[i] = 0;
-			for (size_t j = 0; j < N; ++j) {
-				vectorE[j] += matrixA[i * N + j] * vectorU[j];
-			}
-		}
-		for (size_t i = 0; i < N; ++i) {
-			vectorE[i] -= vectorB[i];
-		}
+		setZeroVector(vectorE);
+		mulMatrixVector(matrixA, vectorX, vectorE);
+		subVector(vectorE, vectorB);
 		double numerator = 0, denominator = 0;
 		for (size_t i = 0; i < N; ++i) {
 			numerator += pow(vectorE[i], 2);
-			denominator += pow(vectorB[i], 2);
 		}
 		numerator = sqrt(numerator);
+		for (size_t i = 0; i < N; ++i) {
+			denominator += pow(vectorB[i], 2);
+		}
 		denominator = sqrt(denominator);
 		if (numerator / denominator < epsilon) {
 			break;
 		}
 
-		 
-
+		
 	}
 
 	// printMatrix(matrixA);
