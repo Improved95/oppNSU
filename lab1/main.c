@@ -42,6 +42,15 @@ void subVector(double *vector1, double *vector2) {
 	} 
 }
 
+double scalarMul(double *vector1, double *vector2) {
+	double result = 0;
+	for (size_t i = 0; i < N; ++i) {
+		result += (vector1[i] + vector2[i]);
+	}
+
+	return result;
+}
+
 void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) {
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
@@ -55,7 +64,7 @@ void mulVectorVector(double *vector1, double *vector2) {
 }
 
 int main() {
-	static const double epsilon = 1 / 10 * 10 * 10 * 10 * 10;
+	static const double epsilon = 0.00001;
 
 	double *matrixA = malloc(N * N * sizeof(double));
 	for (size_t i = 0; i < N * N; ++i) {
@@ -67,19 +76,26 @@ int main() {
 
 	double *vectorU = calloc(sizeof(double), N);
 	for (size_t i = 0; i < N; ++i) {
-		vectorU[i] = sin((2 * PI * i) / N);
+		vectorU[i] = sin(2 * 3.14 * (i + 1) / N);
 	}
 
 	double *vectorX = calloc(sizeof(double), N);
 	double *vectorB = calloc(sizeof(double), N);
 
-	double *vectorE = calloc(sizeof(double), N); // for check less epsilon
+	double *vectorE = calloc(sizeof(double), N); // y^n
+	double *vectorBuffer = calloc(sizeof(double), N); 
+	double tao = 0;
 
 	//take vector b
+	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);
-
+	printVector(vectorU);
+	printVector(vectorB);
+	exit(1);
+	
 	while(1) {
 		setZeroVector(vectorE);
+		setZeroVector(vectorBuffer);
 		mulMatrixVector(matrixA, vectorX, vectorE);
 		subVector(vectorE, vectorB);
 		double numerator = 0, denominator = 0;
@@ -95,8 +111,17 @@ int main() {
 			break;
 		}
 
-		
+		mulMatrixVector(matrixA, vectorE, vectorBuffer);
+		double t1 = scalarMul(vectorE, vectorBuffer);
+		double t2 = scalarMul(vectorBuffer, vectorBuffer);
+		tao = t1 / t2;
+
+		for (size_t i = 0; i < N; ++i) {
+			vectorX[i] = vectorX[i] - (vectorE[i] * tao);
+		}
 	}
+
+	printVector(vectorX);
 
 	// printMatrix(matrixA);
 	// printVector(vectorU);
