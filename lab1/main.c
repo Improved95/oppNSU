@@ -74,7 +74,7 @@ int main() {
 
 	double *vectorU = calloc(sizeof(double), N);
 	for (size_t i = 0; i < N; ++i) {
-		vectorU[i] = sin(2 * 3.14 * (i + 1) / N);
+		vectorU[i] = sin(2 * PI * (i + 1) / N);
 	}
 	printVector(vectorU);
 	printf("\n");
