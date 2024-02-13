@@ -76,9 +76,10 @@ int main(int argc, char *argv[]) {
 
 	}
 
-	double *vectorU = calloc(sizeof(double), N);
+	double *vectorU = NULL;
 	if (rank == 0) {
 
+		vectorU = calloc(sizeof(double), N);
 		for (size_t i = 0; i < N; ++i) {
 			vectorU[i] = sin(2 * PI * (i + 1) / N);
 		}
@@ -87,11 +88,23 @@ int main(int argc, char *argv[]) {
 
 	}
 
-	double *vectorX = calloc(sizeof(double), N);
-	double *vectorB = calloc(sizeof(double), N);
+	double *vectorX = NULL;
+	double *vectorB = NULL;
+	if (rank == 0) {
 
-	double *vectorAxn_b = calloc(sizeof(double), N);
-	double *vectorAyn = calloc(sizeof(double), N);
+		vectorX = calloc(sizeof(double), N);
+		vectorB = calloc(sizeof(double), N);
+
+	}
+
+	double *vectorAxn_b = NULL;
+	double *vectorAyn = NULL;
+	if (rank == 0) {
+
+		vectorAxn_b = calloc(sizeof(double), N);
+		vectorAyn = calloc(sizeof(double), N);
+
+	}
 	double tao = 0, t1 = 0, t2 = 0;
 
 	if (rank == 0) {
@@ -102,9 +115,13 @@ int main(int argc, char *argv[]) {
 	}
 	
 	for(size_t k = 0; 1; ++k) {
-		setZeroVector(vectorAxn_b);
-		mulMatrixVector(matrixA, vectorX, vectorAxn_b);
-		subVector(vectorAxn_b, vectorB);
+		if (rank == 0) {
+
+			setZeroVector(vectorAxn_b);
+			mulMatrixVector(matrixA, vectorX, vectorAxn_b);
+			subVector(vectorAxn_b, vectorB);
+			
+		}
 
 		double numerator = 0, denominator = 0;
 
