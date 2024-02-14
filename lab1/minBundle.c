@@ -4,7 +4,7 @@
 #include <math.h>
 
 #define PI 3.14159265358979323846
-#define N 10
+#define N 1000
 
 // for (size_t i = 0; i < N; i++) {
     //     for (size_t k = 0; k < N; k++) {

@@ -42,7 +42,7 @@ double scalarMul(double *vector1, double *vector2) {
 	return result;
 }
 
-void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) {
+void mulMatrixVector(double *matrix, double *inputVector, double *outputVector, double *pieceVector) {
 
 	/*for (size_t i = 0; i < N; ++i) {
 			
@@ -51,6 +51,14 @@ void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) 
 			}
 
 	}*/
+
+	if (rank == 0) {
+
+		for (size_t i = 0; i < N; ++i) {
+			MPI_Send();
+		}
+		
+	}
 }
 
 void mulVectorVector(double *vector1, double *vector2) {
@@ -76,6 +84,11 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
+	}
+
+	double *vectorPieceOfMatrix = NULL;
+	if (rank != 0) {
+		vectorPieceOfMatrix = calloc(N, sizeof(double));
 	}
 
 	double *vectorU = NULL;
@@ -112,7 +125,7 @@ int main(int argc, char *argv[]) {
 	if (rank == 0) {
 
 		setZeroVector(vectorB);
-		mulMatrixVector(matrixA, vectorU, vectorB);
+		mulMatrixVector(matrixA, vectorU, vectorB, vectorPieceOfMatrix);
 
 	}
 	
@@ -124,7 +137,7 @@ int main(int argc, char *argv[]) {
 
 		}
 
-		mulMatrixVector(matrixA, vectorX, vectorAxn_b);
+		mulMatrixVector(matrixA, vectorX, vectorAxn_b, vectorPieceOfMatrix);
 
 		if (rank == 0) {
 
@@ -171,7 +184,7 @@ int main(int argc, char *argv[]) {
 			setZeroVector(vectorAyn);
 		}
 
-		mulMatrixVector(matrixA, vectorAxn_b, vectorAyn);
+		mulMatrixVector(matrixA, vectorAxn_b, vectorAyn, vectorPieceOfMatrix);
 		
 		if (rank == 0) {
 			t1 = scalarMul(vectorAxn_b, vectorAyn);
