@@ -43,13 +43,14 @@ double scalarMul(double *vector1, double *vector2) {
 }
 
 void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) {
-	for (size_t i = 0; i < N; ++i) {
+
+	/*for (size_t i = 0; i < N; ++i) {
 			
 			for (size_t j = 0; j < N; ++j) {
 				outputVector[i] += matrix[i * N + j] * inputVector[j];
 			}
 
-	}
+	}*/
 }
 
 void mulVectorVector(double *vector1, double *vector2) {
@@ -160,7 +161,7 @@ int main(int argc, char *argv[]) {
 		if (rank != 0) {
 			MPI_Recv(&isComplete, 1, MPI_INT, 0, 199, MPI_COMM_WORLD, &st);
 		}
-		
+
 		if (isComplete) break;
 
 
@@ -176,10 +177,11 @@ int main(int argc, char *argv[]) {
 			t1 = scalarMul(vectorAxn_b, vectorAyn);
 			t2 = scalarMul(vectorAyn, vectorAyn);
 			tao = t1 / t2;
-		}
+		
+			for (size_t i = 0; i < N; ++i) {
+				vectorX[i] = vectorX[i] - (vectorAxn_b[i] * tao);
+			}
 
-		for (size_t i = 0; i < N; ++i) {
-			vectorX[i] = vectorX[i] - (vectorAxn_b[i] * tao);
 		}
 	}
 
