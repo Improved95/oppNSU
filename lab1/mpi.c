@@ -58,6 +58,7 @@ void mulVectorVector(double *vector1, double *vector2) {
 
 int main(int argc, char *argv[]) {
 	MPI_Init(&argc, &argv);
+	MPI_Status st;
 	MPI_Comm_size(MPI_COMM_WORLD, &sizeProc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -114,38 +115,68 @@ int main(int argc, char *argv[]) {
 
 	}
 	
+	int isComplete = 0;
 	for(size_t k = 0; 1; ++k) {
 		if (rank == 0) {
 
 			setZeroVector(vectorAxn_b);
-			mulMatrixVector(matrixA, vectorX, vectorAxn_b);
+
+		}
+
+		mulMatrixVector(matrixA, vectorX, vectorAxn_b);
+
+		if (rank == 0) {
+
 			subVector(vectorAxn_b, vectorB);
+
+		}
 			
+
+		if (rank == 0) {
+
+			double numerator = 0, denominator = 0;
+			
+			for (size_t i = 0; i < N; ++i) {
+				double a = vectorAxn_b[i];
+				numerator += (a * a);
+			}
+			numerator = sqrt(numerator);
+
+			for (size_t i = 0; i < N; ++i) {
+				double a = vectorB[i];
+				denominator += (a * a);
+			}
+			denominator = sqrt(denominator);
+
+			if (numerator / denominator < epsilon) {
+				isComplete = 1;
+			}
+			
+			for (size_t i = 1; i < sizeProc; ++i) {
+				MPI_Send(&isComplete, 1, MPI_INT, i, 199, MPI_COMM_WORLD);
+			}
 		}
 
-		double numerator = 0, denominator = 0;
-
-		for (size_t i = 0; i < N; ++i) {
-			double a = vectorAxn_b[i];
-			numerator += (a * a);
+		if (rank != 0) {
+			MPI_Recv(&isComplete, 1, MPI_INT, 0, 199, MPI_COMM_WORLD, &st);
 		}
-		numerator = sqrt(numerator);
+		
+		if (isComplete) break;
 
-		for (size_t i = 0; i < N; ++i) {
-			double a = vectorB[i];
-			denominator += (a * a);
-		}
-		denominator = sqrt(denominator);
 
-		if (numerator / denominator < epsilon) {
-			break;
+		//--------------------------==---------------------------
+
+		if (rank == 0) {
+			setZeroVector(vectorAyn);
 		}
 
-		setZeroVector(vectorAyn);
 		mulMatrixVector(matrixA, vectorAxn_b, vectorAyn);
-		t1 = scalarMul(vectorAxn_b, vectorAyn);
-		t2 = scalarMul(vectorAyn, vectorAyn);
-		tao = t1 / t2;
+		
+		if (rank == 0) {
+			t1 = scalarMul(vectorAxn_b, vectorAyn);
+			t2 = scalarMul(vectorAyn, vectorAyn);
+			tao = t1 / t2;
+		}
 
 		for (size_t i = 0; i < N; ++i) {
 			vectorX[i] = vectorX[i] - (vectorAxn_b[i] * tao);
