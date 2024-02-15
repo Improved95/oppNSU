@@ -4,7 +4,8 @@
 #include <math.h>
 
 #define PI 3.14159265358979323846
-#define N 200
+#define N 500
+
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
@@ -66,14 +67,14 @@ int main() {
 	for (size_t i = 0; i < N; ++i) {
 		vectorU[i] = sin(2 * PI * (i + 1) / N);
 	}
-	printVector(vectorU);
-	printf("\n");
+	// printVector(vectorU);
+	// printf("\n");
 
 	double *vectorX = calloc(sizeof(double), N);
 	double *vectorB = calloc(sizeof(double), N);
 
 	double *vectorAxn_b = calloc(sizeof(double), N);
-	double tao = 0.01;
+	double tao = 0.00025;
 
 	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);
@@ -105,6 +106,13 @@ int main() {
 		for (size_t i = 0; i < N; ++i) {
 			vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
 		}
+
+        // if (k == 1000) {
+		// 	printVector(vectorX);
+		// 	printVector(vectorAxn_b);
+		// 	printf("%f, %f", numerator, denominator);
+		// 	exit(1);
+		// }
 	}
 
 	// printVector(vectorX);
