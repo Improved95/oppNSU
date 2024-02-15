@@ -106,13 +106,6 @@ int main() {
 		for (size_t i = 0; i < N; ++i) {
 			vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
 		}
-
-        // if (k == 1000) {
-		// 	printVector(vectorX);
-		// 	printVector(vectorAxn_b);
-		// 	printf("%f, %f", numerator, denominator);
-		// 	exit(1);
-		// }
 	}
 
 	// printVector(vectorX);
