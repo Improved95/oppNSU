@@ -4,17 +4,7 @@
 #include <math.h>
 
 #define PI 3.14159265358979323846
-#define N 201
-
-// for (size_t i = 0; i < N; i++) {
-    //     for (size_t k = 0; k < N; k++) {
-    //         for (size_t j = 0; j < N; j++) {
-    //             temp[i][j] += (*this)[i][k] * source[k][j];
-	// 		}
-    //     }
-    // }
-// Ax = b
-
+#define N 200
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
@@ -76,15 +66,14 @@ int main() {
 	for (size_t i = 0; i < N; ++i) {
 		vectorU[i] = sin(2 * PI * (i + 1) / N);
 	}
-	// printVector(vectorU);
-	// printf("\n");
+	printVector(vectorU);
+	printf("\n");
 
 	double *vectorX = calloc(sizeof(double), N);
 	double *vectorB = calloc(sizeof(double), N);
 
 	double *vectorAxn_b = calloc(sizeof(double), N);
-	double *vectorAyn = calloc(sizeof(double), N); 
-	double tao = 0.01, t1 = 0, t2 = 0;
+	double tao = 0.01;
 
 	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);
@@ -109,20 +98,21 @@ int main() {
 		denominator = sqrt(denominator);
 
 		if (numerator / denominator < epsilon) {
-			// printf("%ld\n", k);
+			printf("%ld\n", k);
 			break;
 		}
-
-		// setZeroVector(vectorAyn);
-		// mulMatrixVector(matrixA, vectorAxn_b, vectorAyn);
-		// t1 = scalarMul(vectorAxn_b, vectorAyn);
-		// t2 = scalarMul(vectorAyn, vectorAyn);
 
 		for (size_t i = 0; i < N; ++i) {
 			vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
 		}
 	}
 
-	printVector(vectorX);
+	// printVector(vectorX);
+
+    free(matrixA);
+	free(vectorU);
+	free(vectorX);
+	free(vectorB);
+	free(vectorAxn_b);
 	return 0;
 }
