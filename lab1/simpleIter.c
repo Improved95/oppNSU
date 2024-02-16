@@ -4,7 +4,7 @@
 #include <math.h>
 
 #define PI 3.14159265358979323846
-#define N 500
+#define N 10
 
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
@@ -78,6 +78,8 @@ int main() {
 
 	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);
+	printVector(vectorB);
+	return -1;
 
 	for(size_t k = 0; 1; ++k) {
 		setZeroVector(vectorAxn_b);
