@@ -42,7 +42,8 @@ double scalarMul(double *vector1, double *vector2) {
 	return result;
 }
 
-void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVector) {
+void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVector, 
+						double *vectorBuffer, MPI_Status st) {
 
 	/*for (size_t i = 0; i < N; ++i) {
 			
@@ -58,13 +59,43 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 	}
 
 	if (rank == 0) {
+
 		for (size_t i = 1; i < sizeProccess; ++i) {
-			MPI_Send(inputVector, N, MPI_DOUBLE, i, 1991, MPI_COMM_WORLD);
+			int vectorQuantity = N / sizeProccess;
+			if ((N % sizeProccess != 0) && (N % sizeProccess >= i + 1)) {
+				vectorQuantity++;
+			}
+
+			MPI_Send(inputVector, N * vectorQuantity, MPI_DOUBLE, i, 1991, MPI_COMM_WORLD);
 		}
+
 	}
 	if (rank != 0) {
-			MPI_Recv();
+
+		MPI_Recv(vectorBuffer, N * vectorQuantity, MPI_DOUBLE, 0, 1991, MPI_COMM_WORLD, &st);
+
 	}
+
+	if (rank == 0) {
+
+		for (size_t i = 0; i < vectorQuantity; ++i) {
+			for (size_t j = 0; j < N; ++j) {
+				outputVector[i] += pieceVector[i * N + j] * inputVector[j];
+			}
+		}
+
+	}
+	if (rank != 0) {
+		double res[vectorQuantity] = { 0 };
+
+		for (size_t i = 0; i < vectorQuantity; ++i) {
+			for (size_t j = 0; j < N; ++j) {
+				res[i] += pieceVector[i * N + j] * inputVector[j];
+			}
+		}
+
+	}
+
 }
 
 void mulVectorVector(double *vector1, double *vector2) {
@@ -98,7 +129,7 @@ int main(int argc, char *argv[]) {
 	double *vectorU = NULL;
 	if (rank == 0) {
 
-		vectorU = calloc(sizeof(double), N);
+		vectorU = calloc(N, sizeof(double));
 		for (size_t i = 0; i < N; ++i) {
 			vectorU[i] = sin(2 * PI * (i + 1) / N);
 		}
@@ -111,17 +142,22 @@ int main(int argc, char *argv[]) {
 	double *vectorB = NULL;
 	if (rank == 0) {
 
-		vectorX = calloc(sizeof(double), N);
-		vectorB = calloc(sizeof(double), N);
+		vectorX = calloc(N, sizeof(double));
+		vectorB = calloc(N, sizeof(double));
+
+	}
+
+	double *vectorBuffer = NULL;
+	if (rank != 0) {
+
+		vectorBuffer = calloc(N, sizeof(double));
 
 	}
 
 	double *vectorAxn_b = NULL;
-	double *vectorAyn = NULL;
 	if (rank == 0) {
 
-		vectorAxn_b = calloc(sizeof(double), N);
-		vectorAyn = calloc(sizeof(double), N);
+		vectorAxn_b = calloc(N, sizeof(double));
 
 	}
 	double tao = 0.00025;
@@ -129,7 +165,7 @@ int main(int argc, char *argv[]) {
 	if (rank == 0) {
 
 		setZeroVector(vectorB);
-		mulMatrixVector(vectorPieceOfMatrix, vectorU, vectorB);
+		mulMatrixVector(vectorPieceOfMatrix, vectorU, vectorB, vectorBuffer, st);
 
 	}
 	
