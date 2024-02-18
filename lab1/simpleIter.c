@@ -67,8 +67,8 @@ int main() {
 	for (size_t i = 0; i < N; ++i) {
 		vectorU[i] = sin(2 * PI * (i + 1) / N);
 	}
-	// printVector(vectorU);
-	// printf("\n");
+	printVector(vectorU);
+	printf("\n");
 
 	double *vectorX = calloc(sizeof(double), N);
 	double *vectorB = calloc(sizeof(double), N);
@@ -78,8 +78,6 @@ int main() {
 
 	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);
-	printVector(vectorB);
-	return -1;
 
 	for(size_t k = 0; 1; ++k) {
 		setZeroVector(vectorAxn_b);
@@ -110,7 +108,7 @@ int main() {
 		}
 	}
 
-	// printVector(vectorX);
+	printVector(vectorX);
 
     free(matrixA);
 	free(vectorU);
