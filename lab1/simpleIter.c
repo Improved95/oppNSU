@@ -6,6 +6,9 @@
 #define PI 3.14159265358979323846
 #define N 10
 
+const double epsilon = 0.00001;
+const double tao = 0.0003;
+
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
@@ -53,8 +56,6 @@ void mulVectorVector(double *vector1, double *vector2) {
 }
 
 int main() {
-	const double epsilon = 0.00001;
-
 	double *matrixA = malloc(N * N * sizeof(double));
 	for (size_t i = 0; i < N * N; ++i) {
 		matrixA[i] = 1.0;
@@ -74,7 +75,6 @@ int main() {
 	double *vectorB = calloc(sizeof(double), N);
 
 	double *vectorAxn_b = calloc(sizeof(double), N);
-	double tao = 0.00025;
 
 	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);

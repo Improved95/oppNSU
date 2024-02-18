@@ -5,11 +5,11 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 250
+#define N 55
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
-const double tao = 0.00025;
+const double tao = 0.0003;
 
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
@@ -83,30 +83,9 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 				res[i] += pieceVector[i * N + j] * vectorBuffer[j];
 			}
 		}
-		
-		// test cout
-		// printf("rank: %d:\n", rank);
-		// for (size_t i = 1; i < sizeProccess; ++i) {
-		// 	if (rank == i) {
-		// 		// for (size_t j = 0; j < vectorQuantity; ++j) {
-		// 		// 	printf("%f ", res[j]);
-		// 		// }
-		// 		// for (size_t j = 0; j < N; ++j) {
-		// 		// 	printf("%f ", vectorBuffer[j]);
-		// 		// }
-
-		// 		for (size_t j = 0; j < vectorQuantity; ++j) {
-		// 			for (size_t k = 0; k < N; ++k) {
-		// 				printf("%f ", pieceVector[j * N + k]);
-		// 			}
-		// 			printf("\n");
-		// 		}
-
-		// 	}
-		// }
-		// printf("\n");
 
 		MPI_Send(res, vectorQuantity, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD);
+
 	}
 
 	if (rank == 0) {
@@ -126,13 +105,6 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 		}
 		
 	}
-
-	// MPI_Barrier(MPI_COMM_WORLD);
-	// exit(1);
-}
-
-void mulVectorVector(double *vector1, double *vector2) {
-
 }
 
 int main(int argc, char *argv[]) {
@@ -146,7 +118,6 @@ int main(int argc, char *argv[]) {
 	if ((N % sizeProccess != 0) && (N % sizeProccess >= rank + 1)) {
 		vectorQuantity++;
 	}
-
 	int vectorQuantityInPrevProcess = 0;
 	for (size_t i = 0; i < rank; ++i) {
 		vectorQuantityInPrevProcess += N / sizeProccess;
@@ -164,22 +135,9 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// for (size_t i = 0; i < sizeProccess; ++i) {
-	// 		if (rank == i) {
-	// 			for (size_t j = 0; j < vectorQuantity; ++j) {
-	// 				for (size_t k = 0; k < N; ++k) {
-	// 					printf("%d ", (int)pieceVector[j * N + k]);
-	// 				}
-	// 				printf("\n");
-	// 			}
-
-	// 		}
-	// 		MPI_Barrier(MPI_COMM_WORLD);
-	// 	}
-	// 	return -1;
-
 	double *vectorU = NULL;
 	if (rank == 0) {
+
 		printf("MPI\n");
 		vectorU = calloc(N, sizeof(double));
 		for (size_t i = 0; i < N; ++i) {
@@ -218,14 +176,8 @@ int main(int argc, char *argv[]) {
 		setZeroVector(vectorB);
 
 	}
-	mulMatrixVector(pieceVector, vectorU, vectorB, vectorBuffer, st);
 	
-	// if (rank == 0) {
-	// 	printVector(vectorB);
-	// 	return -1;
-	// }
-
-	// MPI_Barrier(MPI_COMM_WORLD);
+	mulMatrixVector(pieceVector, vectorU, vectorB, vectorBuffer, st);
 
 	int isComplete = 0;
 	for(size_t k = 0; 1; ++k) {
@@ -236,7 +188,6 @@ int main(int argc, char *argv[]) {
 		}
 
 		mulMatrixVector(pieceVector, vectorX, vectorAxn_b, vectorBuffer, st);
-		MPI_Barrier(MPI_COMM_WORLD);
 
 		if (rank == 0) {
 
@@ -244,7 +195,6 @@ int main(int argc, char *argv[]) {
 
 		}
 			
-
 		if (rank == 0) {
 
 			double numerator = 0, denominator = 0;
@@ -268,10 +218,13 @@ int main(int argc, char *argv[]) {
 			for (size_t i = 1; i < sizeProccess; ++i) {
 				MPI_Send(&isComplete, 1, MPI_INT, i, 199, MPI_COMM_WORLD);
 			}
+
 		}
 
 		if (rank != 0) {
+
 			MPI_Recv(&isComplete, 1, MPI_INT, 0, 199, MPI_COMM_WORLD, &st);
+
 		}
 
 		if (isComplete) {
@@ -282,9 +235,6 @@ int main(int argc, char *argv[]) {
 			}
 			break; 
 		}
-
-
-		//--------------------------==---------------------------
 
 		if (rank == 0) {
 
