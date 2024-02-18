@@ -51,18 +51,16 @@ void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) 
 	}
 }
 
-void mulVectorVector(double *vector1, double *vector2) {
-
-}
-
 int main() {
 	double *matrixA = malloc(N * N * sizeof(double));
-	for (size_t i = 0; i < N * N; ++i) {
-		matrixA[i] = 1.0;
+	for (size_t i = 0; i < N; ++i) {
+		for (size_t j = 0; j < N; ++j) {
+			matrixA[i * N + j] = 1.0;
+			if (i == j) {
+				matrixA[i * N + j] = 2.0;
+			}
+		}
 	}
-	for (size_t i = 0; i < N * N; i += N + 1) {
-		matrixA[i] = 2.0;
- 	}
 
 	double *vectorU = calloc(sizeof(double), N);
 	for (size_t i = 0; i < N; ++i) {

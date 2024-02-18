@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 55
+#define N 10
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
@@ -78,7 +78,7 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 
 		double res[vectorQuantity];
 
-		for (size_t i = 0; i < vectorQuantity; ++i) {
+		for (size_t i = 0; i < vectorQuantity; ++i) {														
 			for (size_t j = 0; j < N; ++j) {
 				res[i] += pieceVector[i * N + j] * vectorBuffer[j];
 			}
