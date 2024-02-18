@@ -5,8 +5,11 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 10
+#define N 250
+
 static int rank, sizeProccess;
+const double epsilon = 0.00001;
+const double tao = 0.00025;
 
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
@@ -138,8 +141,6 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &sizeProccess);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	const double epsilon = 0.00001;
-
 	double *pieceVector = NULL;
 	int vectorQuantity = N / sizeProccess;
 	if ((N % sizeProccess != 0) && (N % sizeProccess >= rank + 1)) {
@@ -211,7 +212,6 @@ int main(int argc, char *argv[]) {
 		vectorAxn_b = calloc(N, sizeof(double));
 
 	}
-	double tao = 0.00025;
 
 	if (rank == 0) {
 
@@ -236,6 +236,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		mulMatrixVector(pieceVector, vectorX, vectorAxn_b, vectorBuffer, st);
+		MPI_Barrier(MPI_COMM_WORLD);
 
 		if (rank == 0) {
 
@@ -273,13 +274,24 @@ int main(int argc, char *argv[]) {
 			MPI_Recv(&isComplete, 1, MPI_INT, 0, 199, MPI_COMM_WORLD, &st);
 		}
 
-		if (isComplete) break;
+		if (isComplete) {
+			if (rank == 0) {
+
+				printf("%ld\n", k);
+			
+			}
+			break; 
+		}
 
 
 		//--------------------------==---------------------------
 
-		for (size_t i = 0; i < N; ++i) {
-			vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
+		if (rank == 0) {
+
+			for (size_t i = 0; i < N; ++i) {
+				vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
+			}
+		
 		}
 	}
 
