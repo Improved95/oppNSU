@@ -76,9 +76,7 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 	}
 	if (rank != 0) {
 
-		// double res[vectorQuantity];
 		double res = 0;
-
 		for (size_t i = 0; i < vectorQuantity; ++i) {		
 			res = 0;												
 			for (size_t j = 0; j < N; ++j) {
@@ -87,8 +85,6 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 
 			MPI_Send(&res, 1, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD);
 		}
-
-		// MPI_Send(res, vectorQuantity, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD);
 
 	}
 
@@ -148,8 +144,8 @@ int main(int argc, char *argv[]) {
 		for (size_t i = 0; i < N; ++i) {
 			vectorU[i] = sin(2 * PI * (i + 1) / N);
 		}
-		printVector(vectorU);
-		printf("\n");
+		// printVector(vectorU);
+		// printf("\n");
 
 	}
 
@@ -252,7 +248,7 @@ int main(int argc, char *argv[]) {
 
 	if (rank == 0) {
 
-		printVector(vectorX);
+		// printVector(vectorX);
 	
 	}
 

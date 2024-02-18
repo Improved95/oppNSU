@@ -66,8 +66,8 @@ int main() {
 	for (size_t i = 0; i < N; ++i) {
 		vectorU[i] = sin(2 * PI * (i + 1) / N);
 	}
-	printVector(vectorU);
-	printf("\n");
+	// printVector(vectorU);
+	// printf("\n");
 
 	double *vectorX = calloc(sizeof(double), N);
 	double *vectorB = calloc(sizeof(double), N);
@@ -77,7 +77,6 @@ int main() {
 	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);
 
-	volatile size_t startTime = __builtin_ia32_rdtsc();
 	for(size_t k = 0; 1; ++k) {
 		setZeroVector(vectorAxn_b);
 		mulMatrixVector(matrixA, vectorX, vectorAxn_b);
@@ -106,10 +105,8 @@ int main() {
 			vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
 		}
 	}
-	volatile size_t endTime = __builtin_ia32_rdtsc();
 
-	printVector(vectorX);
-	// printf("time: %ld\n", endTime - startTime);
+	// printVector(vectorX);
 
     free(matrixA);
 	free(vectorU);
