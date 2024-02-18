@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 10
+#define N 500
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
@@ -76,31 +76,36 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 	}
 	if (rank != 0) {
 
-		double res[vectorQuantity];
+		// double res[vectorQuantity];
+		double res = 0;
 
-		for (size_t i = 0; i < vectorQuantity; ++i) {														
+		for (size_t i = 0; i < vectorQuantity; ++i) {		
+			res = 0;												
 			for (size_t j = 0; j < N; ++j) {
-				res[i] += pieceVector[i * N + j] * vectorBuffer[j];
+				res += pieceVector[i * N + j] * vectorBuffer[j];
 			}
+
+			MPI_Send(&res, 1, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD);
 		}
 
-		MPI_Send(res, vectorQuantity, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD);
+		// MPI_Send(res, vectorQuantity, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD);
 
 	}
 
 	if (rank == 0) {
 
-		double res[vectorQuantity];
+		double res = 0;
 		size_t posInOutputVector = vectorQuantity;
 		for (size_t i = 1; i < sizeProccess; ++i) {
 			int vectorQuantityInAnotherProcess = N / sizeProccess;
 			if ((N % sizeProccess != 0) && (N % sizeProccess >= i + 1)) {
 				vectorQuantityInAnotherProcess++;
 			}
-			MPI_Recv(res, vectorQuantityInAnotherProcess, MPI_DOUBLE, i, 1992, MPI_COMM_WORLD, &st);
-
-			for (size_t j = 0; j < vectorQuantityInAnotherProcess; ++j, ++posInOutputVector) {
-				outputVector[posInOutputVector] = res[j];
+			
+			for (size_t j = 0; j < vectorQuantityInAnotherProcess; ++j) {
+				MPI_Recv(&res, 1, MPI_DOUBLE, i, 1992, MPI_COMM_WORLD, &st);
+				outputVector[posInOutputVector] = res;
+				++posInOutputVector;
 			}
 		}
 		

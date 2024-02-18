@@ -4,7 +4,7 @@
 #include <math.h>
 
 #define PI 3.14159265358979323846
-#define N 10
+#define N 500
 
 const double epsilon = 0.00001;
 const double tao = 0.0003;
@@ -77,6 +77,7 @@ int main() {
 	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);
 
+	volatile size_t startTime = __builtin_ia32_rdtsc();
 	for(size_t k = 0; 1; ++k) {
 		setZeroVector(vectorAxn_b);
 		mulMatrixVector(matrixA, vectorX, vectorAxn_b);
@@ -105,8 +106,10 @@ int main() {
 			vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
 		}
 	}
+	volatile size_t endTime = __builtin_ia32_rdtsc();
 
 	printVector(vectorX);
+	// printf("time: %ld\n", endTime - startTime);
 
     free(matrixA);
 	free(vectorU);
