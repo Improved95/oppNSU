@@ -53,10 +53,11 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 		vectorQuantity++;
 	}
 
+	MPI_Request req[2];
 	if (rank == 0) {
 		
 		for (size_t i = 1; i < sizeProccess; ++i) {
-			MPI_Send(inputVector, N, MPI_DOUBLE, i, 1991, MPI_COMM_WORLD);
+			MPI_Isend(inputVector, N, MPI_DOUBLE, i, 1991, MPI_COMM_WORLD, &req[0]);
 		}
 		
 	}
@@ -72,6 +73,7 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 				outputVector[i] += pieceVector[i * N + j] * inputVector[j];
 			}
 		}
+		MPI_Wait(&req[0], &st);
 
 	}
 	if (rank != 0) {
@@ -83,8 +85,9 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 				res += pieceVector[i * N + j] * vectorBuffer[j];
 			}
 
-			MPI_Send(&res, 1, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD);
+			MPI_Isend(&res, 1, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD, &req[1]);
 		}
+		MPI_Wait(&req[1], &st);
 
 	}
 
@@ -180,6 +183,13 @@ int main(int argc, char *argv[]) {
 	
 	mulMatrixVector(pieceVector, vectorU, vectorB, vectorBuffer, st);
 
+	double startTime = 0;
+	if (rank == 0) {
+
+		startTime = MPI_Wtime();
+
+	}
+
 	int isComplete = 0;
 	for(size_t k = 0; 1; ++k) {
 		if (rank == 0) {
@@ -247,11 +257,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (rank == 0) {
-
+		
+		double endTime = MPI_Wtime();
+		printf("%f\n", endTime - startTime);
 		// printVector(vectorX);
 	
 	}
-
 	free(pieceVector);
 	free(vectorBuffer);
 	free(vectorU);

@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 	double *vectorU = NULL;
 	if (rank == 0) {
 
-		printf("MPI\n");
+		printf("MPIv2\n");
 		vectorU = calloc(N, sizeof(double));
 		for (size_t i = 0; i < N; ++i) {
 			vectorU[i] = sin(2 * PI * (i + 1) / N);
@@ -188,12 +188,6 @@ int main(int argc, char *argv[]) {
 			}
 		
 		}
-	}
-
-	if (rank == 0) {
-
-		// printVector(vectorX);
-	
 	}
 
 	free(pieceVector);
