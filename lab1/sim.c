@@ -53,18 +53,22 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 		vectorQuantity++;
 	}
 
-	MPI_Request req[2];
-	if (rank == 0) {
-		
-		for (size_t i = 1; i < sizeProccess; ++i) {
-			MPI_Isend(inputVector, N, MPI_DOUBLE, i, 1991, MPI_COMM_WORLD, &req[0]);
-		}
-		
-	}
 	if (rank != 0) {
-
-		MPI_Recv(vectorBuffer, N, MPI_DOUBLE, 0, 1991, MPI_COMM_WORLD, &st);
+		inputVector = vectorBuffer;
 	}
+	MPI_Bcast(inputVector, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	// if (rank == 0) {
+		
+	// 	for (size_t i = 1; i < sizeProccess; ++i) {
+	// 		MPI_Isend(inputVector, N, MPI_DOUBLE, i, 1991, MPI_COMM_WORLD, &req[0]);
+	// 	}
+		
+	// }
+	// if (rank != 0) {
+
+	// 	MPI_Recv(vectorBuffer, N, MPI_DOUBLE, 0, 1991, MPI_COMM_WORLD, &st);
+		
+	// }
 
 	if (rank == 0) {
 
@@ -73,7 +77,6 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 				outputVector[i] += pieceVector[i * N + j] * inputVector[j];
 			}
 		}
-		MPI_Wait(&req[0], &st);
 
 	}
 	if (rank != 0) {
@@ -82,12 +85,11 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 		for (size_t i = 0; i < vectorQuantity; ++i) {		
 			res = 0;												
 			for (size_t j = 0; j < N; ++j) {
-				res += pieceVector[i * N + j] * vectorBuffer[j];
+				res += pieceVector[i * N + j] * inputVector[j];
 			}
 
-			MPI_Isend(&res, 1, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD, &req[1]);
+			MPI_Send(&res, 1, MPI_DOUBLE, 0, 1992, MPI_COMM_WORLD);
 		}
-		MPI_Wait(&req[1], &st);
 
 	}
 
