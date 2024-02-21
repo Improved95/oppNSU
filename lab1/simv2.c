@@ -114,6 +114,7 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 			printVector(outputVector, vectorSizeInCurrentProcess);
 		}
 	}
+	
 	breakProgramm();
 
 }
