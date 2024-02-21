@@ -35,14 +35,6 @@ void subVector(double *vector1, double *vector2) {
 	} 
 }
 
-double scalarMul(double *vector1, double *vector2) {
-	double result = 0;
-	for (size_t i = 0; i < N; ++i) {
-		result += (vector1[i] * vector2[i]);
-	}
-	return result;
-}
-
 void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) {
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {

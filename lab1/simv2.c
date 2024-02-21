@@ -52,18 +52,10 @@ void setZeroVector(double *vector, size_t vectorSize) {
 	memset(vector, 0, vectorSize * sizeof(double));
 }
 
-void subVector(double *vector1, double *vector2) {
-	for (size_t i = 0; i < N; ++i) {
+void subVector(double *vector1, double *vector2, size_t sizeVector) {
+	for (size_t i = 0; i < sizeVector; ++i) {
 		vector1[i] -= vector2[i];
 	} 
-}
-
-double scalarMul(double *vector1, double *vector2) {
-	double result = 0;
-	for (size_t i = 0; i < N; ++i) {
-		result += (vector1[i] * vector2[i]);
-	}
-	return result;
 }
 
 void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVector,
@@ -108,14 +100,13 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 		}
 	}
 	
-	for (int i = 0; i < sizeProccess; ++i) {
-		MPI_Barrier(MPI_COMM_WORLD);
-		if (i == rank) {
-			printVector(outputVector, vectorSizeInCurrentProcess);
-		}
-	}
-	
-	breakProgramm();
+	// for (int i = 0; i < sizeProccess; ++i) {
+	// 	MPI_Barrier(MPI_COMM_WORLD);
+	// 	if (i == rank) {
+	// 		printVector(outputVector, vectorSizeInCurrentProcess);
+	// 	}
+	// }
+	// breakProgramm();
 
 }
 
@@ -175,20 +166,10 @@ int main(int argc, char *argv[]) {
 
 	int isComplete = 0;
 	for(size_t k = 0; 1; ++k) {
-		if (rank == 0) {
-
-			setZeroVector(vectorAxn_b, vectorSizeInCurrentProcess);
-
-		}
-
+		setZeroVector(vectorAxn_b, vectorSizeInCurrentProcess);
 		mulMatrixVector(pieceVectorOfMatrix, vectorX, vectorAxn_b, 
 							vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
-
-		if (rank == 0) {
-
-			subVector(vectorAxn_b, vectorB);
-
-		}
+		subVector(vectorAxn_b, vectorB, vectorSizeInCurrentProcess);
 			
 		if (rank == 0) {
 
@@ -215,6 +196,8 @@ int main(int argc, char *argv[]) {
 			}
 
 		}
+
+
 
 		if (rank != 0) {
 
