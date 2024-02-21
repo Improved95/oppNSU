@@ -4,7 +4,7 @@
 #include <math.h>
 
 #define PI 3.14159265358979323846
-#define N 500
+#define N 10
 
 const double epsilon = 0.00001;
 const double tao = 0.0003;
@@ -66,8 +66,9 @@ int main() {
 	for (size_t i = 0; i < N; ++i) {
 		vectorU[i] = sin(2 * PI * (i + 1) / N);
 	}
-	// printVector(vectorU);
-	// printf("\n");
+	printVector(vectorU);
+	printf("\n");
+	return 0;
 
 	double *vectorX = calloc(sizeof(double), N);
 	double *vectorB = calloc(sizeof(double), N);
