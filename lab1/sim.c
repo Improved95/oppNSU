@@ -54,21 +54,11 @@ void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVec
 	}
 
 	if (rank != 0) {
+
 		inputVector = vectorBuffer;
+		
 	}
 	MPI_Bcast(inputVector, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	// if (rank == 0) {
-		
-	// 	for (size_t i = 1; i < sizeProccess; ++i) {
-	// 		MPI_Isend(inputVector, N, MPI_DOUBLE, i, 1991, MPI_COMM_WORLD, &req[0]);
-	// 	}
-		
-	// }
-	// if (rank != 0) {
-
-	// 	MPI_Recv(vectorBuffer, N, MPI_DOUBLE, 0, 1991, MPI_COMM_WORLD, &st);
-		
-	// }
 
 	if (rank == 0) {
 

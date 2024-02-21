@@ -4,7 +4,7 @@
 #include <math.h>
 
 #define PI 3.14159265358979323846
-#define N 10
+#define N 14
 
 const double epsilon = 0.00001;
 const double tao = 0.0003;
