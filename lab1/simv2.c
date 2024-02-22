@@ -77,14 +77,6 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 	
 	MPI_Request req[2];
 	MPI_Status st;
-	
-	// for (int i = 0; i < sizeProccess; ++i) {
-	// 	MPI_Barrier(MPI_COMM_WORLD);
-	// 	if (i == rank) {
-	// 		printf("rank %d, vs %ld, sum %ld, shift %ld\n", rank, vectorSizeInCurrentProcess, sumSizeVectorInPrevProcesses, shiftSize);
-	// 	}
-	// }
-	// breakProgramm();
 
 	size_t indexInVector = sumSizeVectorInPrevProcesses; //позиция в строке в которой работаем
 	size_t numberBlockInVector = rank; // номер блока в котором работаем
@@ -94,10 +86,6 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 		for (size_t j = 0; j < vectorSizeInCurrentProcess; ++j) {
 			for (size_t k = 0; k < shiftSize; ++k) {
 				outputVector[j] += pieceVector[(j * N + k + indexInVector) % (N * vectorSizeInCurrentProcess)] * circleVector[k];
-				// if (rank == 0 && j == 1) {
-				// 	printf("%d %d %d %ld\n", (int)outputVector[j], 
-				// 	(int)pieceVector[(j * N + k + indexInVector) % (N * vectorSizeInCurrentProcess)], (int)circleVector[k], indexInVector);
-				// }
 			}
 		}
 
@@ -105,19 +93,13 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 		if ((N % sizeProccess != 0) && (N % sizeProccess >= numberBlockInVector + 1)) {
 			blockSize++;
 		}
-		// if (rank == 0) {
-		// 	printf("%ld ", blockSize);
-		// }
+		
 		if ((N % sizeProccess != 0) && (shiftSize > blockSize)) {
 			indexInVector--;
 		}
 		indexInVector += shiftSize;
 		numberBlockInVector++;
 		numberBlockInVector %= sizeProccess;
-		
-		// if (rank == 0) {
-			// printVector(outputVector, vectorSizeInCurrentProcess);
-		// }
 
 		/*сдвиг циклический*/
 		if (sizeProccess > 1) {		   
@@ -126,10 +108,6 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 			MPI_Waitall(2, req, &st);
 		}
 	}
-	
-	// printVectorv2(outputVector, vectorSizeInCurrentProcess);
-	// breakProgramm();
-
 }
 
 int main(int argc, char *argv[]) {
@@ -163,20 +141,12 @@ int main(int argc, char *argv[]) {
 	size_t shiftSize = N / sizeProccess + (N % sizeProccess != 0);
 
 	double *vectorU = calloc(shiftSize, sizeof(double));
-	vectorU = calloc(N, sizeof(double));
 	for (size_t i = 0; i < vectorSizeInCurrentProcess; ++i) {
 		vectorU[i] = sin(2 * PI * (i + 1 + sumSizeVectorInPrevProcesses) / N);
-		// vectorU[i] = i + sumSizeVectorInPrevProcesses + 1;
 	}
-
-	// if (rank == 0) { printf("MPIv2\n"); }
-
-	// printVectorv2(vectorU, vectorSizeInCurrentProcess);
-	// breakProgramm();
 
 	double *vectorX = NULL;
 	double *vectorB = NULL;
-	// double *vectorBuffer = NULL;
 	vectorX = calloc(shiftSize, sizeof(double));
 	vectorB = calloc(shiftSize, sizeof(double));
 
@@ -186,15 +156,7 @@ int main(int argc, char *argv[]) {
 	mulMatrixVector(pieceVectorOfMatrix, vectorU, vectorB, 
 						vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
 
-	// printVectorv2(vectorB, vectorSizeInCurrentProcess);
-	// breakProgramm();
-
 	double normB = getNorm(vectorB, vectorSizeInCurrentProcess);
-	// if (rank == 0) {
-	// 	printf("%f", normB);
-	// }
-	// breakProgramm();
-	
 	
 	double startTime = MPI_Wtime();
 
