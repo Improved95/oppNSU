@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 6
+#define N 10
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
@@ -106,20 +106,6 @@ int main(int argc, char *argv[]) {
 		vectorSizeInCurrentProcess++;
 	}
 
-	int displs[sizeProccess - 1];
-	int recvCount[sizeProccess];
-	memset(displs, 0, (sizeProccess - 1) * sizeof(int));
-	memset(recvCount, 0, (sizeProccess) * sizeof(int));
-		
-	for (size_t i = 0; i < sizeProccess; ++i) {
-		recvCount[i] += N / sizeProccess;
-		displs[i] += (N / sizeProccess) * i;
-		if ((N % sizeProccess != 0) && (N % sizeProccess >= i + 1)) {
-			recvCount[i]++;
-			displs[i]++;
-		}
-	}
-
 	size_t sumSizeVectorInPrevProcesses = 0;
 	for (size_t i = 0; i < rank; ++i) {
 		sumSizeVectorInPrevProcesses += N / sizeProccess;
@@ -144,8 +130,8 @@ int main(int argc, char *argv[]) {
 		printf("MPI\n");
 		vectorU = calloc(N, sizeof(double));
 		for (size_t i = 0; i < N; ++i) {
-			// vectorU[i] = sin(2 * PI * (i + 1) / N);
-			vectorU[i] = i + 1;
+			vectorU[i] = sin(2 * PI * (i + 1) / N);
+			// vectorU[i] = i + 1;
 		}
 		// printVector(vectorU);
 		// printf("\n");
@@ -203,30 +189,34 @@ int main(int argc, char *argv[]) {
 		if (normAx_b / normB < epsilon) {
 			break;
 		}
+		
+		if (rank != 0) {
 
-	if (rank == 0) {
-			for (size_t j = 0; j < sizeProccess; ++j) {
-				printf("%d ", recvCount[j]);
-			}
-			printf("\n");
-			for (size_t j = 0; j < sizeProccess - 1; ++j) {
-				printf("%d ", displs[j]);
-			}
+			MPI_Send(vectorAxn_b, vectorSizeInCurrentProcess, MPI_DOUBLE, 0, 991, MPI_COMM_WORLD);
+
 		}
 
-		MPI_Gatherv(vectorAxn_b, vectorSizeInCurrentProcess, MPI_DOUBLE, completeVectorAxn_b, recvCount, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-		
-		
-
-		// printVector(completeVectorAxn_b);
-		breakProgramm();
-		
 		if (rank == 0) {
-			
-			for (size_t i = 0; i < N; ++i) {
+			size_t vsinpp = vectorSizeInCurrentProcess;
+			for (size_t i = 1; i < sizeProccess; ++i) {
+				size_t vsinip = N / sizeProccess;
+				if ((N % sizeProccess != 0) && (N % sizeProccess >= i + 1)) {
+					vsinip++;
+				}
+				// printf("%ld", vsinip);
+				MPI_Recv(completeVectorAxn_b + vsinpp, vsinip, MPI_DOUBLE, i, 991, MPI_COMM_WORLD, &st);
+				vsinpp += vsinip;
+			}
+
+			// printVector(completeVectorAxn_b);
+			// breakProgramm();
+
+			for (size_t i = 0; i < vectorSizeInCurrentProcess; ++i) {
+				vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
+			}
+			for (size_t i = vectorSizeInCurrentProcess; i < N; ++i) {
 				vectorX[i] = vectorX[i] - (tao * completeVectorAxn_b[i]);
 			}
-		
 		}
 	}
 
@@ -239,7 +229,7 @@ int main(int argc, char *argv[]) {
 	if (rank == 0) {
 
 		// printVector(vectorX);
-		// printf("%f\n", finalTime);
+		printf("%f\n", finalTime);
 
 	}
 
