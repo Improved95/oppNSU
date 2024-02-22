@@ -63,6 +63,12 @@ void subVector(double *vector1, double *vector2) {
 	} 
 }
 
+void subVectorV2(double *vector1, double *vector2, size_t sizeVector) {
+	for (size_t i = 0; i < sizeVector; ++i) {
+		vector1[i] -= vector2[i];
+	} 
+}
+
 double getNorm(double *vector, size_t sizeVector) {
 	double sum = 0;
 	for (size_t i = 0; i < sizeVector; ++i) {
@@ -73,11 +79,11 @@ double getNorm(double *vector, size_t sizeVector) {
 	double res = 0;
 	MPI_Allreduce(&sum, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-	return res;
+	return sqrt(res);
 }
 
 void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVector, 
-		size_t vectorSizeInCurrentProcess, size_t sumSizeVectorInPrevProcesses ) {
+		size_t vectorSizeInCurrentProcess) {
 
 	MPI_Bcast(inputVector, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
@@ -99,6 +105,21 @@ int main(int argc, char *argv[]) {
 	if ((N % sizeProccess != 0) && (N % sizeProccess >= rank + 1)) {
 		vectorSizeInCurrentProcess++;
 	}
+
+	int displs[sizeProccess - 1];
+	int recvCount[sizeProccess];
+	memset(displs, 0, (sizeProccess - 1) * sizeof(int));
+	memset(recvCount, 0, (sizeProccess) * sizeof(int));
+		
+	for (size_t i = 0; i < sizeProccess; ++i) {
+		recvCount[i] += N / sizeProccess;
+		displs[i] += (N / sizeProccess) * i;
+		if ((N % sizeProccess != 0) && (N % sizeProccess >= i + 1)) {
+			recvCount[i]++;
+			displs[i]++;
+		}
+	}
+
 	size_t sumSizeVectorInPrevProcesses = 0;
 	for (size_t i = 0; i < rank; ++i) {
 		sumSizeVectorInPrevProcesses += N / sizeProccess;
@@ -106,6 +127,7 @@ int main(int argc, char *argv[]) {
 			sumSizeVectorInPrevProcesses++;
 		}
 	}
+
 	pieceVector = calloc(vectorSizeInCurrentProcess * N, sizeof(double));
 	for (size_t i = 0; i < vectorSizeInCurrentProcess; ++i) {
 		for (size_t j = 0; j < N; ++j) {
@@ -125,14 +147,16 @@ int main(int argc, char *argv[]) {
 			// vectorU[i] = sin(2 * PI * (i + 1) / N);
 			vectorU[i] = i + 1;
 		}
-		printVector(vectorU);
-		printf("\n");
+		// printVector(vectorU);
+		// printf("\n");
 
 	}
 
 	double *vectorX = NULL;
+	double *completeVectorAxn_b = NULL;
 	if (rank == 0) {
-
+		
+		completeVectorAxn_b = calloc(N, sizeof(double));
 		vectorX = calloc(N, sizeof(double));
 
 	}
@@ -144,10 +168,8 @@ int main(int argc, char *argv[]) {
 
 	}
 
-	double *vectorB = NULL;
-	double *vectorAxn_b = NULL;
-	vectorB = calloc(vectorSizeInCurrentProcess, sizeof(double));
-	vectorAxn_b = calloc(vectorSizeInCurrentProcess, sizeof(double));
+	double *vectorB = calloc(vectorSizeInCurrentProcess, sizeof(double));
+	double *vectorAxn_b = calloc(vectorSizeInCurrentProcess, sizeof(double));
 
 	if (rank == 0) {
 
@@ -160,8 +182,7 @@ int main(int argc, char *argv[]) {
 		vectorU = vectorBuffer;
 
 	}
-	mulMatrixVector(pieceVector, vectorU, vectorB, 
-						vectorSizeInCurrentProcess, sumSizeVectorInPrevProcesses);
+	mulMatrixVector(pieceVector, vectorU, vectorB, vectorSizeInCurrentProcess);
 
 	double normB = getNorm(vectorB, vectorSizeInCurrentProcess);
 
@@ -175,42 +196,35 @@ int main(int argc, char *argv[]) {
 	int isComplete = 0;
 	for(size_t k = 0; 1; ++k) {
 		setZeroVectorV2(vectorAxn_b, vectorSizeInCurrentProcess);
+		mulMatrixVector(pieceVector, vectorX, vectorAxn_b, vectorSizeInCurrentProcess);
+		subVectorV2(vectorAxn_b, vectorB, vectorSizeInCurrentProcess);
+
+		double normAx_b = getNorm(vectorAxn_b, vectorSizeInCurrentProcess);
+		if (normAx_b / normB < epsilon) {
+			break;
+		}
+
+	if (rank == 0) {
+			for (size_t j = 0; j < sizeProccess; ++j) {
+				printf("%d ", recvCount[j]);
+			}
+			printf("\n");
+			for (size_t j = 0; j < sizeProccess - 1; ++j) {
+				printf("%d ", displs[j]);
+			}
+		}
+
+		MPI_Gatherv(vectorAxn_b, vectorSizeInCurrentProcess, MPI_DOUBLE, completeVectorAxn_b, recvCount, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 		
-		mulMatrixVector(pieceVector, vectorX, vectorAxn_b,
-							vectorSizeInCurrentProcess, sumSizeVectorInPrevProcesses);
+		
 
+		// printVector(completeVectorAxn_b);
+		breakProgramm();
+		
 		if (rank == 0) {
-
-			subVector(vectorAxn_b, vectorB);
-
-		}
-			
-		if (rank == 0) {
-
-			double numerator = 0;
 			
 			for (size_t i = 0; i < N; ++i) {
-				double a = vectorAxn_b[i];
-				numerator += (a * a);
-			}
-			numerator = sqrt(numerator);
-
-			if (numerator / normB < epsilon) {
-				isComplete = 1;
-			}
-
-		}
-
-		MPI_Bcast(&isComplete, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-		if (isComplete) {
-			break; 
-		}
-
-		if (rank == 0) {
-
-			for (size_t i = 0; i < N; ++i) {
-				vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
+				vectorX[i] = vectorX[i] - (tao * completeVectorAxn_b[i]);
 			}
 		
 		}
@@ -223,9 +237,9 @@ int main(int argc, char *argv[]) {
 	MPI_Reduce(&time, &finalTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
 	if (rank == 0) {
-		
-		printVector(vectorX);
-		printf("%f\n", finalTime);
+
+		// printVector(vectorX);
+		// printf("%f\n", finalTime);
 
 	}
 
@@ -238,7 +252,8 @@ int main(int argc, char *argv[]) {
 
 	}
 	free(vectorB);
-	free(vectorAxn_b);
+	// free(vectorAxn_b);
+	free(completeVectorAxn_b);
 
 	MPI_Finalize();
 	return 0;
