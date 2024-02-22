@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 10
+#define N 5
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
@@ -56,6 +56,19 @@ void subVector(double *vector1, double *vector2, size_t sizeVector) {
 	for (size_t i = 0; i < sizeVector; ++i) {
 		vector1[i] -= vector2[i];
 	} 
+}
+
+double getNorm(double *vector, size_t sizeVector) {
+	double sum = 0;
+	for (size_t i = 0; i < sizeVector; ++i) {
+		double a = vector[i];
+		sum += (a * a);
+	}
+
+	double res = 0;
+	MPI_Allreduce(&sum, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+	return res;
 }
 
 void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVector,
@@ -113,8 +126,8 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 		}
 	}
 	
-	printVectorv2(outputVector, vectorSizeInCurrentProcess);
-	breakProgramm();
+	// printVectorv2(outputVector, vectorSizeInCurrentProcess);
+	// breakProgramm();
 
 }
 
@@ -172,8 +185,14 @@ int main(int argc, char *argv[]) {
 	mulMatrixVector(pieceVectorOfMatrix, vectorU, vectorB, 
 						vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
 
-	// printVectorv2(vectorB, vectorSizeInCurrentProcess);
+	printVectorv2(vectorB, vectorSizeInCurrentProcess);
 	// breakProgramm();
+
+	double normB = getNorm(vectorB, vectorSizeInCurrentProcess);
+	if (rank == 0) {
+		printf("%f", normB);
+	}
+	breakProgramm();
 
 	int isComplete = 0;
 	for(size_t k = 0; 1; ++k) {
@@ -182,60 +201,16 @@ int main(int argc, char *argv[]) {
 							vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
 		subVector(vectorAxn_b, vectorB, vectorSizeInCurrentProcess);
 			
-		if (rank == 0) {
-
-			double numerator = 0, denominator = 0;
-			
-			for (size_t i = 0; i < N; ++i) {
-				double a = vectorAxn_b[i];
-				numerator += (a * a);
-			}
-			numerator = sqrt(numerator);
-
-			for (size_t i = 0; i < N; ++i) {
-				double a = vectorB[i];
-				denominator += (a * a);
-			}
-			denominator = sqrt(denominator);
-
-			if (numerator / denominator < epsilon) {
-				isComplete = 1;
-			}
-			
-			for (size_t i = 1; i < sizeProccess; ++i) {
-				MPI_Send(&isComplete, 1, MPI_INT, i, 199, MPI_COMM_WORLD);
-			}
-
-		}
 
 
-
-		if (rank != 0) {
-
-			MPI_Recv(&isComplete, 1, MPI_INT, 0, 199, MPI_COMM_WORLD, &st);
-
-		}
-
-		if (isComplete) {
-			if (rank == 0) {
-
-				printf("%ld\n", k);
-			
-			}
-			break; 
-		}
-
-		if (rank == 0) {
-
-			for (size_t i = 0; i < N; ++i) {
-				vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
-			}
 		
-		}
+
+			// for (size_t i = 0; i < N; ++i) {
+			// 	vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
+			// }
 	}
 
 	free(pieceVectorOfMatrix);
-	// free(vectorBuffer);
 	free(vectorU);
 	free(vectorX);
 	free(vectorB);
