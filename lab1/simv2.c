@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 5
+#define N 500
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
@@ -36,14 +36,15 @@ void printVectorv2(double *vector, size_t vectorSize) {
 	for (size_t i = 0; i < sizeProccess; ++i) {
 		MPI_Barrier(MPI_COMM_WORLD);
 		if (i == rank) {
-			printf("rank %d: ", rank);
+			// printf("rank %d: ", rank);
 			for (size_t j = 0; j < vectorSize; ++j) {
 				printf("%f ", vector[j]);
 			}
-			printf("\n");
+			// printf("\n");
 		}
 	}
 	if (rank == sizeProccess - 1) {
+			printf("\n");
 			printf("\n");
 	}
 }
@@ -68,7 +69,7 @@ double getNorm(double *vector, size_t sizeVector) {
 	double res = 0;
 	MPI_Allreduce(&sum, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-	return res;
+	return sqrt(res);
 }
 
 void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVector,
@@ -164,8 +165,8 @@ int main(int argc, char *argv[]) {
 	double *vectorU = calloc(shiftSize, sizeof(double));
 	vectorU = calloc(N, sizeof(double));
 	for (size_t i = 0; i < vectorSizeInCurrentProcess; ++i) {
-		// vectorU[i] = sin(2 * PI * (i + 1 + sumSizeVectorInPrevProcesses) / N);
-		vectorU[i] = i + sumSizeVectorInPrevProcesses + 1;
+		vectorU[i] = sin(2 * PI * (i + 1 + sumSizeVectorInPrevProcesses) / N);
+		// vectorU[i] = i + sumSizeVectorInPrevProcesses + 1;
 	}
 
 	// if (rank == 0) { printf("MPIv2\n"); }
@@ -185,29 +186,46 @@ int main(int argc, char *argv[]) {
 	mulMatrixVector(pieceVectorOfMatrix, vectorU, vectorB, 
 						vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
 
-	printVectorv2(vectorB, vectorSizeInCurrentProcess);
+	// printVectorv2(vectorB, vectorSizeInCurrentProcess);
 	// breakProgramm();
 
 	double normB = getNorm(vectorB, vectorSizeInCurrentProcess);
-	if (rank == 0) {
-		printf("%f", normB);
-	}
-	breakProgramm();
+	// if (rank == 0) {
+	// 	printf("%f", normB);
+	// }
+	// breakProgramm();
+	
+	
+	double startTime = MPI_Wtime();
 
-	int isComplete = 0;
 	for(size_t k = 0; 1; ++k) {
 		setZeroVector(vectorAxn_b, vectorSizeInCurrentProcess);
 		mulMatrixVector(pieceVectorOfMatrix, vectorX, vectorAxn_b, 
 							vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
 		subVector(vectorAxn_b, vectorB, vectorSizeInCurrentProcess);
 			
-
-
+		double normAx_b = getNorm(vectorAxn_b, vectorSizeInCurrentProcess);
+		if (normAx_b / normB < epsilon) {
+			break;
+		}
 		
+		for (size_t i = 0; i < vectorSizeInCurrentProcess; ++i) {
+			vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
+		}
+	}
 
-			// for (size_t i = 0; i < N; ++i) {
-			// 	vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
-			// }
+	double endTime = MPI_Wtime();
+	double time = endTime - startTime;
+
+	double finalTime = 0;
+	MPI_Reduce(&time, &finalTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
+	// printVectorv2(vectorX, vectorSizeInCurrentProcess);
+
+	if (rank == 0) {
+
+		printf("%f\n", finalTime);
+
 	}
 
 	free(pieceVectorOfMatrix);
