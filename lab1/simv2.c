@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 6
+#define N 10
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
@@ -72,41 +72,49 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 	// }
 	// breakProgramm();
 
-	size_t indexInVector = sumSizeVectorInPrevProcesses;
-	for (size_t i = 0; i < N / shiftSize + (N % shiftSize != 0); ++i) {
+	size_t indexInVector = sumSizeVectorInPrevProcesses; //позиция в строке в которой работаем
+	size_t numberBlockInVector = rank; // номер блока в котором работаем
+	for (size_t i = 0; i < sizeProccess; ++i) {
+		indexInVector %= N;
+
 		for (size_t j = 0; j < vectorSizeInCurrentProcess; ++j) {
 			for (size_t k = 0; k < shiftSize; ++k) {
 				outputVector[j] += pieceVector[(j * N + k + indexInVector) % (N * vectorSizeInCurrentProcess)] * circleVector[k];
-				// if (rank == 2 && j == 0) {
-				// 	printf("%d %d %d\n", (int)outputVector[j], 
-				// 	(int)pieceVector[(j * N + k + indexInVector) % (N * vectorSizeInCurrentProcess)], (int)circleVector[k]);
+				// if (rank == 0 && j == 1) {
+				// 	printf("%d %d %d %ld\n", (int)outputVector[j], 
+				// 	(int)pieceVector[(j * N + k + indexInVector) % (N * vectorSizeInCurrentProcess)], (int)circleVector[k], indexInVector);
 				// }
 			}
 		}
-		if ((N % shiftSize != 0) && (indexInVector > N / shiftSize)) {
+
+		size_t blockSize = N / sizeProccess;
+		if ((N % sizeProccess != 0) && (N % sizeProccess >= numberBlockInVector + 1)) {
+			blockSize++;
+		}
+		// if (rank == 0) {
+		// 	printf("%ld ", blockSize);
+		// }
+		if ((N % sizeProccess != 0) && (shiftSize > blockSize)) {
 			indexInVector--;
 		}
 		indexInVector += shiftSize;
+		numberBlockInVector++;
+		numberBlockInVector %= sizeProccess;
 		
 		// if (rank == 0) {
 			// printVector(outputVector, vectorSizeInCurrentProcess);
 		// }
 
 		/*сдвиг циклический*/
-		if (sizeProccess > 1) {
+		if (sizeProccess > 1) {		   
 			MPI_Isend(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 12345, MPI_COMM_WORLD, &req[0]);
-			MPI_Irecv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1			   ) % sizeProccess, 12345, MPI_COMM_WORLD, &req[1]);
+			MPI_Irecv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1	  	 	   ) % sizeProccess, 12345, MPI_COMM_WORLD, &req[1]);
 			MPI_Waitall(2, req, &st);
 		}
 	}
 	
-	// for (int i = 0; i < sizeProccess; ++i) {
-	// 	MPI_Barrier(MPI_COMM_WORLD);
-	// 	if (i == rank) {
-	// 		printVector(outputVector, vectorSizeInCurrentProcess);
-	// 	}
-	// }
-	// breakProgramm();
+	printVectorv2(outputVector, vectorSizeInCurrentProcess);
+	breakProgramm();
 
 }
 
@@ -163,6 +171,9 @@ int main(int argc, char *argv[]) {
 
 	mulMatrixVector(pieceVectorOfMatrix, vectorU, vectorB, 
 						vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
+
+	// printVectorv2(vectorB, vectorSizeInCurrentProcess);
+	// breakProgramm();
 
 	int isComplete = 0;
 	for(size_t k = 0; 1; ++k) {
