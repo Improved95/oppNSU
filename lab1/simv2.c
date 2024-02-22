@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	double *pieceVectorOfMatrix = NULL;
-	int vectorSizeInCurrentProcess = N / sizeProccess;
+	size_t vectorSizeInCurrentProcess = N / sizeProccess;
 	if ((N % sizeProccess != 0) && (N % sizeProccess >= rank + 1)) {
 		vectorSizeInCurrentProcess++;
 	}
@@ -153,12 +153,12 @@ int main(int argc, char *argv[]) {
 	double *vectorAxn_b = NULL;
 	vectorAxn_b = calloc(shiftSize, sizeof(double));
 
-	mulMatrixVector(pieceVectorOfMatrix, vectorU, vectorB, 
+	mulMatrixVector(pieceVectorOfMatrix, vectorU, vectorB,
 						vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
-
-	double normB = getNorm(vectorB, vectorSizeInCurrentProcess);
 	
 	double startTime = MPI_Wtime();
+
+	double normB = getNorm(vectorB, vectorSizeInCurrentProcess);
 
 	for(size_t k = 0; 1; ++k) {
 		setZeroVector(vectorAxn_b, vectorSizeInCurrentProcess);
