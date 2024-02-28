@@ -5,11 +5,11 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 14
+#define N 1000
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
-const double tao = 0.0003;
+const double tao = 0.0001;
 
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
@@ -80,7 +80,7 @@ double getNorm(double *vector, size_t sizeVector) {
 	double res = 0;
 	MPI_Allreduce(&sum, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-	return sqrt(res);
+	return res;
 }
 
 void mulMatrixVector(double *pieceVector, double *inputVector, double *outputVector, 
@@ -127,11 +127,10 @@ int main(int argc, char *argv[]) {
 	double *vectorU = NULL;
 	if (rank == 0) {
 
-		printf("MPI\n");
+		printf("MPIv1\n");
 		vectorU = calloc(N, sizeof(double));
 		for (size_t i = 0; i < N; ++i) {
-			// vectorU[i] = sin(2 * PI * (i + 1) / N);
-			vectorU[i] = i + 1;
+			vectorU[i] = sin(2 * PI * (i + 1) / N);
 		}
 		// printVector(vectorU);
 		// printf("\n");
@@ -203,28 +202,28 @@ int main(int argc, char *argv[]) {
 		subVectorV2(vectorAxn_b, vectorB, vectorSizeInCurrentProcess);
 
 		double normAx_b = getNorm(vectorAxn_b, vectorSizeInCurrentProcess);
-		if (normAx_b / normB < epsilon) {
-			printf("iterations: %ld\n", k);
+		if (normAx_b / normB < epsilon * epsilon) {
+			if (rank == 0) printf("iterations: %ld\n", k);
 			break;
 		}
 		
-		if (rank == 0) {
-			for (size_t j = 0; j < (size_t)sizeProccess; ++j) {
-				printf("%d ", recvCounts[j]);
-			}
-			printf("\n");
-			for (size_t j = 0; j < (size_t)sizeProccess; ++j) {
-				printf("%d ", displs[j]);
-			}
-			printf("\n");
-		}
+		// if (rank == 0) {
+		// 	for (size_t j = 0; j < (size_t)sizeProccess; ++j) {
+		// 		printf("%d ", recvCounts[j]);
+		// 	}
+		// 	printf("\n");
+		// 	for (size_t j = 0; j < (size_t)sizeProccess; ++j) {
+		// 		printf("%d ", displs[j]);
+		// 	}
+		// 	printf("\n");
+		// }
 
 		// printVectorv2(vectorAxn_b, vectorSizeInCurrentProcess);
 		MPI_Gatherv(vectorAxn_b, vectorSizeInCurrentProcess, MPI_DOUBLE, 
 						completeVectorAxn_b, recvCounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 		
-		printVector(completeVectorAxn_b);
-		breakProgramm();
+		// printVector(completeVectorAxn_b);
+		// breakProgramm();
 		
 		if (rank == 0) {
 			
@@ -243,8 +242,8 @@ int main(int argc, char *argv[]) {
 
 	if (rank == 0) {
 
-		printVector(vectorX);
-		printf("%f\n", finalTime);
+		// printVector(vectorX);
+		printf("time: %f\n", finalTime);
 
 	}
 
@@ -257,7 +256,7 @@ int main(int argc, char *argv[]) {
 
 	}
 	free(vectorB);
-	// free(vectorAxn_b);
+	free(vectorAxn_b);
 	free(completeVectorAxn_b);
 
 	MPI_Finalize();

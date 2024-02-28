@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 1000
+#define N 6
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
@@ -22,6 +22,7 @@ void printMatrix(double *matrix) {
 
 void breakProgramm() {
 	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Finalize();
 	exit(-1);
 }
 
@@ -69,13 +70,12 @@ double getNorm(double *vector, size_t sizeVector) {
 	double res = 0;
 	MPI_Allreduce(&sum, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-	return sqrt(res);
+	return res;
 }
 
 void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVector,
 						size_t vectorSizeInCurrentProcess, size_t shiftSize, size_t sumSizeVectorInPrevProcesses) {
 	
-	MPI_Request req[2];
 	MPI_Status st;
 
 	size_t indexInVector = sumSizeVectorInPrevProcesses; //позиция в строке в которой работаем
@@ -101,12 +101,33 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 		numberBlockInVector++;
 		numberBlockInVector %= sizeProccess;
 
+		printVectorv2(circleVector, shiftSize);
+
 		/*сдвиг циклический*/
 		if (sizeProccess > 1) {
-			MPI_Isend(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 12345, MPI_COMM_WORLD, &req[0]);
-			MPI_Irecv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1	  	 	   ) % sizeProccess, 12345, MPI_COMM_WORLD, &req[1]);
-			MPI_Waitall(2, req, &st);
+			// MPI_Isend(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 12345, MPI_COMM_WORLD, &req[0]);
+			// MPI_Irecv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1	  	 	   ) % sizeProccess, 12345, MPI_COMM_WORLD, &req[1]);
+			// MPI_Waitall(2, req, &st);
+
+			// if (rank % 2 != 0) {
+			// 	MPI_Send(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 121212, MPI_COMM_WORLD);
+			// }
+			// if (rank % 2 == 0) {
+			// 	MPI_Recv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1) % sizeProccess, 121212, MPI_COMM_WORLD, &st);
+			// }
+
+			// if (rank % 2 == 0) {
+			// 	MPI_Send(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 212121, MPI_COMM_WORLD);	
+			// }
+			// if (rank % 2 != 0) {
+			// 	MPI_Recv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1) % sizeProccess, 212121, MPI_COMM_WORLD, &st);
+			// }
+
+			
 		}
+
+		printVectorv2(circleVector,shiftSize);
+		breakProgramm();
 	}
 }
 
@@ -141,7 +162,12 @@ int main(int argc, char *argv[]) {
 
 	double *vectorU = calloc(shiftSize, sizeof(double));
 	for (size_t i = 0; i < vectorSizeInCurrentProcess; ++i) {
-		vectorU[i] = sin(2 * PI * (i + 1 + sumSizeVectorInPrevProcesses) / N);
+		// vectorU[i] = sin(2 * PI * (i + 1 + sumSizeVectorInPrevProcesses) / N);
+		vectorU[i] = i + 1 + sumSizeVectorInPrevProcesses;
+	}
+
+	if (rank == 0) {
+		printf("MPIv2\n");
 	}
 
 	double *vectorX = NULL;
@@ -166,7 +192,7 @@ int main(int argc, char *argv[]) {
 		subVector(vectorAxn_b, vectorB, vectorSizeInCurrentProcess);
 			
 		double normAx_b = getNorm(vectorAxn_b, vectorSizeInCurrentProcess);
-		if (normAx_b / normB < epsilon) {
+		if (normAx_b / normB < epsilon * epsilon) {
 			if (rank == 0) printf("iterations: %ld\n", k);
 			break;
 		}
