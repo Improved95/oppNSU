@@ -182,7 +182,6 @@ int main(int argc, char *argv[]) {
 
 	int *recvCounts = calloc(sizeProccess, sizeof(int));
 	int *displs = calloc(sizeProccess, sizeof(int));
-
 	size_t displsCounter = 0;
 	for (size_t i = 0; i < (size_t)sizeProccess - 1; ++i) {
 		displsCounter += N / sizeProccess;
@@ -206,24 +205,9 @@ int main(int argc, char *argv[]) {
 			if (rank == 0) printf("iterations: %ld\n", k);
 			break;
 		}
-		
-		// if (rank == 0) {
-		// 	for (size_t j = 0; j < (size_t)sizeProccess; ++j) {
-		// 		printf("%d ", recvCounts[j]);
-		// 	}
-		// 	printf("\n");
-		// 	for (size_t j = 0; j < (size_t)sizeProccess; ++j) {
-		// 		printf("%d ", displs[j]);
-		// 	}
-		// 	printf("\n");
-		// }
 
-		// printVectorv2(vectorAxn_b, vectorSizeInCurrentProcess);
 		MPI_Gatherv(vectorAxn_b, vectorSizeInCurrentProcess, MPI_DOUBLE, 
 						completeVectorAxn_b, recvCounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-		
-		// printVector(completeVectorAxn_b);
-		// breakProgramm();
 		
 		if (rank == 0) {
 			

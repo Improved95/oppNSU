@@ -5,11 +5,11 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 6
+#define N 2200
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
-const double tao = 0.0001;
+const double tao = 0.0005;
 
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
@@ -73,7 +73,7 @@ double getNorm(double *vector, size_t sizeVector) {
 	return res;
 }
 
-void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVector,
+void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVector, double *circleBuffer,
 						size_t vectorSizeInCurrentProcess, size_t shiftSize, size_t sumSizeVectorInPrevProcesses) {
 	
 	MPI_Status st;
@@ -101,33 +101,23 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 		numberBlockInVector++;
 		numberBlockInVector %= sizeProccess;
 
-		printVectorv2(circleVector, shiftSize);
-
 		/*сдвиг циклический*/
 		if (sizeProccess > 1) {
-			// MPI_Isend(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 12345, MPI_COMM_WORLD, &req[0]);
-			// MPI_Irecv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1	  	 	   ) % sizeProccess, 12345, MPI_COMM_WORLD, &req[1]);
-			// MPI_Waitall(2, req, &st);
-
-			// if (rank % 2 != 0) {
-			// 	MPI_Send(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 121212, MPI_COMM_WORLD);
-			// }
-			// if (rank % 2 == 0) {
-			// 	MPI_Recv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1) % sizeProccess, 121212, MPI_COMM_WORLD, &st);
-			// }
-
-			// if (rank % 2 == 0) {
-			// 	MPI_Send(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 212121, MPI_COMM_WORLD);	
-			// }
-			// if (rank % 2 != 0) {
-			// 	MPI_Recv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1) % sizeProccess, 212121, MPI_COMM_WORLD, &st);
-			// }
-
+			if (rank % 2 == 0) {
+				MPI_Send(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 121212, MPI_COMM_WORLD);
+			}
+			if (rank % 2 != 0) {
+				memmove(circleBuffer, circleVector, shiftSize * sizeof(double));
+				MPI_Recv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1) % sizeProccess, 121212, MPI_COMM_WORLD, &st);
+			}
 			
+			if (rank % 2 != 0) {
+				MPI_Send(circleBuffer, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 121212, MPI_COMM_WORLD);	
+			}
+			if (rank % 2 == 0) {
+				MPI_Recv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1) % sizeProccess, 121212, MPI_COMM_WORLD, &st);
+			}
 		}
-
-		printVectorv2(circleVector,shiftSize);
-		breakProgramm();
 	}
 }
 
@@ -162,32 +152,31 @@ int main(int argc, char *argv[]) {
 
 	double *vectorU = calloc(shiftSize, sizeof(double));
 	for (size_t i = 0; i < vectorSizeInCurrentProcess; ++i) {
-		// vectorU[i] = sin(2 * PI * (i + 1 + sumSizeVectorInPrevProcesses) / N);
-		vectorU[i] = i + 1 + sumSizeVectorInPrevProcesses;
+		vectorU[i] = sin(2 * PI * (i + 1 + sumSizeVectorInPrevProcesses) / N);
+		// vectorU[i] = i + 1 + sumSizeVectorInPrevProcesses;
 	}
 
-	if (rank == 0) {
-		printf("MPIv2\n");
+	double *vectorX = calloc(shiftSize, sizeof(double));
+	double *vectorB = calloc(shiftSize, sizeof(double));
+	double *vectorAxn_b = calloc(shiftSize, sizeof(double));
+	double *circleBuffer = NULL;
+	if (rank % 2 != 0) {
+
+		circleBuffer = calloc(shiftSize, sizeof(double));
+		
 	}
 
-	double *vectorX = NULL;
-	double *vectorB = NULL;
-	vectorX = calloc(shiftSize, sizeof(double));
-	vectorB = calloc(shiftSize, sizeof(double));
-
-	double *vectorAxn_b = NULL;
-	vectorAxn_b = calloc(shiftSize, sizeof(double));
-
-	mulMatrixVector(pieceVectorOfMatrix, vectorU, vectorB,
-						vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
-	
 	double startTime = MPI_Wtime();
+
+	mulMatrixVector(pieceVectorOfMatrix, vectorU, vectorB, circleBuffer,
+						vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
+
 
 	double normB = getNorm(vectorB, vectorSizeInCurrentProcess);
 
 	for(size_t k = 0; 1; ++k) {
 		setZeroVector(vectorAxn_b, vectorSizeInCurrentProcess);
-		mulMatrixVector(pieceVectorOfMatrix, vectorX, vectorAxn_b, 
+		mulMatrixVector(pieceVectorOfMatrix, vectorX, vectorAxn_b, circleBuffer,
 							vectorSizeInCurrentProcess, shiftSize, sumSizeVectorInPrevProcesses);
 		subVector(vectorAxn_b, vectorB, vectorSizeInCurrentProcess);
 			
@@ -208,6 +197,7 @@ int main(int argc, char *argv[]) {
 	double finalTime = 0;
 	MPI_Reduce(&time, &finalTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
+	// printVectorv2(vectorU, vectorSizeInCurrentProcess);
 	// printVectorv2(vectorX, vectorSizeInCurrentProcess);
 
 	if (rank == 0) {
