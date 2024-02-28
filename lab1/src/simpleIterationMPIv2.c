@@ -5,11 +5,11 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 500
+#define N 1000
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
-const double tao = 0.0003;
+const double tao = 0.0001;
 
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
@@ -33,9 +33,9 @@ void printVector(double *vector, size_t vectorSize) {
 }
 
 void printVectorv2(double *vector, size_t vectorSize) {
-	for (size_t i = 0; i < sizeProccess; ++i) {
+	for (size_t i = 0; i < (size_t)sizeProccess; ++i) {
 		MPI_Barrier(MPI_COMM_WORLD);
-		if (i == rank) {
+		if (i == (size_t)rank) {
 			// printf("rank %d: ", rank);
 			for (size_t j = 0; j < vectorSize; ++j) {
 				printf("%f ", vector[j]);
@@ -80,7 +80,7 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 
 	size_t indexInVector = sumSizeVectorInPrevProcesses; //позиция в строке в которой работаем
 	size_t numberBlockInVector = rank; // номер блока в котором работаем
-	for (size_t i = 0; i < sizeProccess; ++i) {
+	for (size_t i = 0; i < (size_t)sizeProccess; ++i) {
 		indexInVector %= N;
 
 		for (size_t j = 0; j < vectorSizeInCurrentProcess; ++j) {
@@ -102,7 +102,7 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 		numberBlockInVector %= sizeProccess;
 
 		/*сдвиг циклический*/
-		if (sizeProccess > 1) {		   
+		if (sizeProccess > 1) {
 			MPI_Isend(circleVector, shiftSize, MPI_DOUBLE, (rank - 1 + sizeProccess) % sizeProccess, 12345, MPI_COMM_WORLD, &req[0]);
 			MPI_Irecv(circleVector, shiftSize, MPI_DOUBLE, (rank + 1	  	 	   ) % sizeProccess, 12345, MPI_COMM_WORLD, &req[1]);
 			MPI_Waitall(2, req, &st);
@@ -112,7 +112,6 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 
 int main(int argc, char *argv[]) {
 	MPI_Init(&argc, &argv);
-	MPI_Status st;
 	MPI_Comm_size(MPI_COMM_WORLD, &sizeProccess);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -122,7 +121,7 @@ int main(int argc, char *argv[]) {
 		vectorSizeInCurrentProcess++;
 	}
 	size_t sumSizeVectorInPrevProcesses = 0;
-	for (size_t i = 0; i < rank; ++i) {
+	for (size_t i = 0; i < (size_t)rank; ++i) {
 		sumSizeVectorInPrevProcesses += N / sizeProccess;
 		if ((N % sizeProccess != 0) && (N % sizeProccess >= i + 1)) {
 			sumSizeVectorInPrevProcesses++;
@@ -168,6 +167,7 @@ int main(int argc, char *argv[]) {
 			
 		double normAx_b = getNorm(vectorAxn_b, vectorSizeInCurrentProcess);
 		if (normAx_b / normB < epsilon) {
+			if (rank == 0) printf("iterations: %ld\n", k);
 			break;
 		}
 		
