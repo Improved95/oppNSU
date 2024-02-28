@@ -5,11 +5,11 @@
 #include <mpi.h>
 
 #define PI 3.14159265358979323846
-#define N 1000
+#define N 2200
 
 static int rank, sizeProccess;
 const double epsilon = 0.00001;
-const double tao = 0.0001;
+const double tao = 0.0005;
 
 void printMatrix(double *matrix) {
 	for (size_t i = 0; i < N; ++i) {
