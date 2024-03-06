@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
 	double *vectorU = NULL;
 	if (rank == 0) {
 
-		printf("MPIv1\n");
+		// printf("MPIv1\n");
 		vectorU = calloc(N, sizeof(double));
 		for (size_t i = 0; i < N; ++i) {
 			vectorU[i] = sin(2 * PI * (i + 1) / N);
@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
 
 		double normAx_b = getNorm(vectorAxn_b, vectorSizeInCurrentProcess);
 		if (normAx_b / normB < epsilon * epsilon) {
-			if (rank == 0) printf("iterations: %ld\n", k);
+			// if (rank == 0) printf("iterations: %ld\n", k);
 			break;
 		}
 

@@ -155,11 +155,11 @@ int main(int argc, char *argv[]) {
 		vectorU[i] = sin(2 * PI * (i + 1 + sumSizeVectorInPrevProcesses) / N);
 	}
 
-	if (rank == 0) {
+	// if (rank == 0) {
 
-		printf("MPIv2\n");
+	// 	printf("MPIv2\n");
 
-	}
+	// }
 
 	double *vectorX = calloc(shiftSize, sizeof(double));
 	double *vectorB = calloc(shiftSize, sizeof(double));
@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
 			
 		double normAx_b = getNorm(vectorAxn_b, vectorSizeInCurrentProcess);
 		if (normAx_b / normB < epsilon * epsilon) {
-			if (rank == 0) printf("iterations: %ld\n", k);
+			// if (rank == 0) printf("iterations: %ld\n", k);
 			break;
 		}
 		
