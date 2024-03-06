@@ -85,7 +85,7 @@ void mulMatrixVector(double *pieceVector, double *circleVector, double *outputVe
 
 		for (size_t j = 0; j < vectorSizeInCurrentProcess; ++j) {
 			for (size_t k = 0; k < shiftSize; ++k) {
-				outputVector[j] += pieceVector[(j * N + k + indexInVector) % (N * vectorSizeInCurrentProcess)] * circleVector[k];
+				outputVector[j] += pieceVector[(j * N + k + indexInVector)] * circleVector[k];
 			}
 		}
 
