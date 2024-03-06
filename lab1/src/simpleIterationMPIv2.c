@@ -153,7 +153,12 @@ int main(int argc, char *argv[]) {
 	double *vectorU = calloc(shiftSize, sizeof(double));
 	for (size_t i = 0; i < vectorSizeInCurrentProcess; ++i) {
 		vectorU[i] = sin(2 * PI * (i + 1 + sumSizeVectorInPrevProcesses) / N);
-		// vectorU[i] = i + 1 + sumSizeVectorInPrevProcesses;
+	}
+
+	if (rank == 0) {
+
+		printf("MPIv2\n");
+
 	}
 
 	double *vectorX = calloc(shiftSize, sizeof(double));
