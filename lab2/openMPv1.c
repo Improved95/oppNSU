@@ -5,7 +5,7 @@
 #include <omp.h>
 
 #define PI 3.14159265358979323846
-#define N 500
+#define N 2200
 
 const double epsilon = 0.00001;
 const double tao = 0.0005;
@@ -90,7 +90,7 @@ int main() {
         subVector(vectorAxn_b, vectorB);
 
         double normAx_b = getNorm(vectorAxn_b);
-        if (normAx_b / normB < epsilon) {
+        if (normAx_b / normB < epsilon * epsilon) {
             // printf("%ld\n", k);
             break;
         }

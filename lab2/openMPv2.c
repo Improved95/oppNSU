@@ -5,7 +5,7 @@
 #include <omp.h>
 
 #define PI 3.14159265358979323846
-#define N 500
+#define N 2200
 
 const double epsilon = 0.00001;
 const double tao = 0.0005;
@@ -54,8 +54,6 @@ double getNorm(double *vector) {
 }
 
 int main() {
-	printf("work");
-
 	double *matrixA = malloc(N * N * sizeof(double));
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
@@ -86,21 +84,20 @@ int main() {
 		#pragma omp for 
 		for (size_t i = 0; i < N; ++i) {
 			for (size_t j = 0; j < N; ++j) {
-				vectorU[i] += matrixA[i * N + j] * vectorB[j];
+				vectorB[i] += matrixA[i * N + j] * vectorU[j];
 			}
 		}
 
 		#pragma omp for reduction(+:normB)
 		for (size_t i = 0; i < N; ++i) {
-			double a = vectorAxn_b[i];
+			double a = vectorB[i];
 			normB += (a * a);
 		}
 
-		while(1) {
-			setZeroVector(vectorAxn_b);
-			
+		do {
 			#pragma omp for 
 			for (size_t i = 0; i < N; ++i) {
+				vectorAxn_b[i] = 0;
 				for (size_t j = 0; j < N; ++j) {
 					vectorAxn_b[i] += matrixA[i * N + j] * vectorX[j];
 				}
@@ -109,8 +106,8 @@ int main() {
 			#pragma omp for 
 			for (size_t i = 0; i < N; ++i) {
 				vectorAxn_b[i] -= vectorB[i];
-			} 
-			
+			}
+			#pragma omp master
 			normAx_b = 0;
 			
 			#pragma omp for reduction(+:normAx_b)
@@ -119,20 +116,15 @@ int main() {
 				normAx_b += (a * a);
 			}
 
-			if (normAx_b / normB < epsilon) {
-				// printf("%ld\n", k);
-				break;
-			}
-
 			#pragma omp for 
 			for (size_t i = 0; i < N; ++i) {
 				vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
 			}
-		}
+
+		} while(normAx_b / normB > epsilon * epsilon);
 
 	}
 	
-
 	// printVector(vectorX);
 
     free(matrixA);
