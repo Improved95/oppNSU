@@ -78,10 +78,11 @@ int main() {
 	double *vectorAxn_b = calloc(sizeof(double), N);
 
 	double normAx_b = 0, normB = 0;
-	/*#pragma omp parallel shared(vectorX, vectorB, vectorAxn_b, normAx_b, normB)
+	#pragma omp parallel
 	{
-
+		#pragma omp single
 		setZeroVector(vectorB);
+		
 		#pragma omp for 
 		for (size_t i = 0; i < N; ++i) {
 			for (size_t j = 0; j < N; ++j) {
@@ -129,7 +130,7 @@ int main() {
 			}
 		}
 
-	}*/
+	}
 	
 
 	// printVector(vectorX);
