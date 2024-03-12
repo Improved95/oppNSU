@@ -3,9 +3,10 @@
 #include <string.h>
 #include <math.h>
 #include <omp.h>
+#include <time.h>
 
 #define PI 3.14159265358979323846
-#define N 2200
+#define N 1000
 
 const double epsilon = 0.00001;
 const double tao = 0.0005;
@@ -79,6 +80,8 @@ int main() {
     double *vectorB = calloc(sizeof(double), N);
     double *vectorAxn_b = calloc(sizeof(double), N);
 
+    double startTime = omp_get_wtime(); 
+
     setZeroVector(vectorB);
     mulMatrixVector(matrixA, vectorU, vectorB);
 
@@ -101,6 +104,8 @@ int main() {
         }
     }
 
+    size_t endTime = omp_get_wtime();
+    printf("%f\n", endTime - startTime);
     // printVector(vectorX);
 
     free(matrixA);
