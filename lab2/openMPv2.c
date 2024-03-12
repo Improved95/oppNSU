@@ -43,6 +43,15 @@ void mulMatrixVector(double *matrix, double *inputVector, double *outputVector) 
 	}
 }
 
+double getNorm(double *vector) {
+    double res = 0;
+    for (size_t i = 0; i < N; ++i) {
+		double a = vector[i];
+		res += (a * a);
+	}
+    return res;
+}
+
 int main() {
 	double *matrixA = malloc(N * N * sizeof(double));
 	for (size_t i = 0; i < N; ++i) {
@@ -58,46 +67,39 @@ int main() {
 	for (size_t i = 0; i < N; ++i) {
 		vectorU[i] = sin(2 * PI * (i + 1) / N);
 	}
-	printVector(vectorU);
-	printf("\n");
-	return 0;
+	// printVector(vectorU);
+	// printf("\n");
 
 	double *vectorX = calloc(sizeof(double), N);
 	double *vectorB = calloc(sizeof(double), N);
-
 	double *vectorAxn_b = calloc(sizeof(double), N);
 
 	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);
 
-	for(size_t k = 0; 1; ++k) {
-		setZeroVector(vectorAxn_b);
-		mulMatrixVector(matrixA, vectorX, vectorAxn_b);
-		subVector(vectorAxn_b, vectorB);
+    double normB = getNorm(vectorB);
 
-		double numerator = 0, denominator = 0;
+	#pragma omp parallel shared(vectorX, vectorB, vectorAxn_b, b_norm) 
+	{
 
-		for (size_t i = 0; i < N; ++i) {
-			double a = vectorAxn_b[i];
-			numerator += (a * a);
+		for(size_t k = 0; 1; ++k) {
+			setZeroVector(vectorAxn_b);
+			mulMatrixVector(matrixA, vectorX, vectorAxn_b);
+			subVector(vectorAxn_b, vectorB);
+
+			double normAx_b = getNorm(vectorAxn_b);
+			if (normAx_b / normB < epsilon) {
+				// printf("%ld\n", k);
+				break;
+			}
+
+			for (size_t i = 0; i < N; ++i) {
+				vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
+			}
 		}
-		numerator = sqrt(numerator);
-
-		for (size_t i = 0; i < N; ++i) {
-			double a = vectorB[i];
-			denominator += (a * a);
-		}
-		denominator = sqrt(denominator);
-
-		if (numerator / denominator < epsilon) {
-			printf("%ld\n", k);
-			break;
-		}
-
-		for (size_t i = 0; i < N; ++i) {
-			vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
-		}
+		 
 	}
+	
 
 	// printVector(vectorX);
 
