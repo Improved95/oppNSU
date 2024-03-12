@@ -1,141 +1,214 @@
-#include<omp.h>
-#include<vector>
-#include<iostream>
-#include<chrono>
-#include <math.h>
+#include <iostream>
+#include <cmath>
+#include <omp.h>
+#include <cstdlib>
+#include <cstddef>
+#include <stdio.h>
 
+const long int N = 500;
+double pi = 3.1415926535;
+const double epsilon = 0.00001;
+double tau = 0.001;
+double norm = 0;
 
-const double t_plus = 0.0001;
-const double t_minus = -0.0001;
-const double epsilon = 0.0001;
-
-class Matrix
-{
-private:
-	std::vector< std::vector<double> > matrix;
-	int N;
-
-public:
-	Matrix(int N)
-	{
-
-		N = N;
-		matrix.resize(N, std::vector<double>(N, 1.0));
-#pragma omp parallel for
-		for (int i = 0; i < matrix.size(); i++)
-		{
-#pragma omp parallel for
-			for (int j = 0; j < matrix.size(); j++)
-			{
-				if (i == j)
-				{
-					matrix[i][j] = 2.0;
-				}
-			}
-		}
-	}
-	int size() {
-		return N;
-	}
-	const std::vector<double>& operator[](int index) const;
-	std::vector<double>& operator[](int index);
-};
-
-std::vector<double>& Matrix::operator[](int index) {
-	return matrix[index];
+double EuclideanNorm(const double* u) {
+    double norm = 0;
+    for (int i = 0; i < N; i++) {
+        norm += u[i] * u[i];
+    }
+    return sqrt(norm);
 }
 
-const std::vector<double>& Matrix::operator[](int index) const {
-	return matrix[index];
+void sub(double* a, double* b, double* c) {
+    for (int i = 0; i < N; i++) {
+        c[i] = a[i] - b[i];
+    }
+}
+
+void Mul(double* A, double* b, double* result, int n) {
+    unsigned int i, j;
+    for (i = 0; i < n; i++) {
+        result[i] = 0;
+        for (j = 0; j < n; j++) {
+            result[i] += A[i * n + j] * b[j];
+        }
+    }
 }
 
 
-double find_norm(const std::vector<double>& row)
-{
-	double result = 0.0;
-	for (int i = 0; i < row.size(); i++)
-	{
-		result += row[i] * row[i];
-	}
-
-	return result;
-}
-
-double multiply_row_by_column(const std::vector<double>& row, const std::vector<double>& column)
-{
-
-	double result = 0.0;
-	for (int i = 0; i < row.size(); ++i) {
-		result += row[i] * column[i];
-	}
-	return result;
+void ScalMul(double* A, double tau) {
+    int i;
+    for (i = 0; i < N; ++i) {
+        A[i] = A[i] * tau;
+    }
 }
 
 
+double drand(double low, double high) {
+    double f = (double)rand() / RAND_MAX;
+    return low + f * (high - low);
+}
 
+double rand_double() {
+    return (double)rand() / RAND_MAX * 4.0 - 2.0;
+}
 
-int main(int argc, char* argv[])
-{
-	
-	int N = 13000;
-	Matrix A(N);
-	std::vector<double> b(N, N + 1);
+double* Vector_U_builder() {
+    double* U = new double[N];
+    for (int j = 0; j < N; j++) {
+        U[j] = (double)sin((2 * j * pi) / N);
+    }
+    return U;
+}
 
+double* Vector_X_builder() {
+    double* X = new double[N];
+    for (int j = 0; j < N; j++) {
+        X[j] = 0.0;
+    }
+    return X;
+}
 
-	//auto begin = std::chrono::steady_clock::now();
-	
-	
-	double b_norm = find_norm(b);
+int main(int argc, char* argv[]) {
+    //srand(100);
+    //omp_set_num_threads(4);
 
-	std::vector<double> result(N);
-	std::vector<double> x1(N, 2.0);
-	std::vector<double> new_x(N);
+    double* X = Vector_X_builder();
+    double* U = Vector_U_builder();
+    double* Ax = new double[N];
 
-	double ep = epsilon * epsilon;
+    double normAxb = 0; // ||A*xn - b||
+    double normb = 0;
+    double saveRes = 10000;
+    double res = 0;
 
-	double res;
+    //double end;
 
-	do {
-		res = 0.0;
+    
+    //matrix A
+    double* A = new double[N * N];
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++)
+        {
+            if (j == i) {
+                A[i * N + j] = 2.0;
+            }
+            else {
+                A[i * N + j] = 1.0;
+            }
+        }
+    }
+    //
 
-	
-#pragma omp parallel for
-		for (int i = 0; i < N; i++) {
-			new_x[i] = multiply_row_by_column(A[i], x1);
-		}
-#pragma omp parallel for
-		for (int i = 0; i < N; i++) {
-			new_x[i] = x1[i] - t_plus * (new_x[i] - b[i]);
-		}
+    //vector B
+    double* B = new double[N];
+    for (int i = 0; i < N; i++) {
+        B[i] = 0;
+        for (int j = 0; j < N; j++) {
+            B[i] += A[i * N + j] * U[j];
+        }
+    }
+    //
 
-		x1 = new_x;
-#pragma omp parallel for
-		for (int i = 0; i < N; i++) {
-			result[i] = multiply_row_by_column(A[i], x1) - b[i];
-		}
-#pragma omp parallel for
-		for (int i = 0; i < N; i++) {
-			res += result[i] * result[i];
-		}
+    Mul(A, X, Ax, N); // A*xn
+    sub(Ax, B, Ax); // A*xn - b
+    normAxb = EuclideanNorm(Ax); // ||A*xn - b||
+    normb = EuclideanNorm(B);
+    ScalMul(Ax, tau); // TAU*(A*xn - b)
 
-#pragma omp for 
-		for (int i = 0; i < b.size(); i++) {
-			b_norm += b[i] * b[i];
-		}
+    double* nextX = new double[N];
 
+    sub(X, Ax, nextX); // xn - TAU * (A*xn - b)
+    //saveRes = normAxb / normb;
+    res = normAxb / normb;
 
-	} while (!(res / b_norm < ep));
+    int countIt = 1;
 
+    double start = clock();
+    //unsigned int i, j;
 
-	/*auto end = std::chrono::steady_clock::now();
+    #pragma omp parallel num_threads(4)
+    {
+        int i = omp_get_thread_num();
+        printf_s("Hello from thread %d\n", i);
+        //printf("asf");
+        //double norm;num_threads(MAX)
+        while (res > epsilon) {
+            #pragma omp master
+            norm = 0;
 
-	auto elapsed_ms = std::chrono::duration_cast<std::chrono::seconds>(end - begin);
-	std::cout << "The time: " << elapsed_ms.count() << " s\n";
+            #pragma omp for
+            for (int i = 0; i < N; i++) {
+                X[i] = nextX[i];
+            }
 
-	for (int i = 0; i < N; i++)
-	{
-		std::cout << x1[i] << " ";
-	}*/
+            #pragma omp for
+            for (int i = 0; i < N; i++) {
+                Ax[i] = 0;
+                for (int j = 0; j < N; j++) {
+                    Ax[i] += A[i * N + j] * X[j];
+                }
+            }
 
-	return 0;
+            #pragma omp for
+            for (int i = 0; i < N; i++) {
+                Ax[i] = Ax[i] - B[i];
+            }
+
+            #pragma omp for reduction(+:norm)
+            for (int i = 0; i < N; i++) {
+                norm += Ax[i] * Ax[i];
+            }
+
+            #pragma omp single
+            norm = sqrt(norm);
+
+            #pragma omp for
+            for (int i = 0; i < N; ++i) {
+                Ax[i] = Ax[i] * tau;
+            }
+
+            #pragma omp for
+            for (int i = 0; i < N; i++) {
+                nextX[i] = X[i] - Ax[i];
+            }
+
+            #pragma omp single
+            {
+                res = norm / normb;
+                countIt++;
+                if (countIt == 10) {
+                    if (saveRes < res) {
+                        tau = (-1) * tau;
+                    }
+                    countIt = 0;
+                    saveRes = res;
+                }
+            }
+        }
+    }
+
+    bool Check = true;
+    for (int i = 0; i < N; i++) {
+        if (X[i] - U[i] > 0.001 || X[i] - U[i] < -0.001) {
+            Check = false;
+        }
+        //printf("%f ", X[i] - U[i]);
+    }
+
+    if (Check) {
+        printf("ItIsTRUE ");
+        printf("Time: %f \n", (double)(clock() - start) / 1000);
+    }
+    else
+    {
+        printf("FALSE");
+    }
+
+    delete []Ax;
+    delete[] nextX;
+    delete[] X;
+    delete[] B;
+    delete[] A;
+    return 0;
 }

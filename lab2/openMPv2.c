@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <omp.h>
 
 #define PI 3.14159265358979323846
-#define N 2200
+#define N 500
 
 const double epsilon = 0.00001;
 const double tao = 0.0005;
@@ -53,6 +54,8 @@ double getNorm(double *vector) {
 }
 
 int main() {
+	printf("work");
+
 	double *matrixA = malloc(N * N * sizeof(double));
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
@@ -74,31 +77,59 @@ int main() {
 	double *vectorB = calloc(sizeof(double), N);
 	double *vectorAxn_b = calloc(sizeof(double), N);
 
-	setZeroVector(vectorB);
-	mulMatrixVector(matrixA, vectorU, vectorB);
-
-    double normB = getNorm(vectorB);
-
-	#pragma omp parallel shared(vectorX, vectorB, vectorAxn_b, b_norm) 
+	double normAx_b = 0, normB = 0;
+	/*#pragma omp parallel shared(vectorX, vectorB, vectorAxn_b, normAx_b, normB)
 	{
 
-		for(size_t k = 0; 1; ++k) {
-			setZeroVector(vectorAxn_b);
-			mulMatrixVector(matrixA, vectorX, vectorAxn_b);
-			subVector(vectorAxn_b, vectorB);
+		setZeroVector(vectorB);
+		#pragma omp for 
+		for (size_t i = 0; i < N; ++i) {
+			for (size_t j = 0; j < N; ++j) {
+				vectorU[i] += matrixA[i * N + j] * vectorB[j];
+			}
+		}
 
-			double normAx_b = getNorm(vectorAxn_b);
+		#pragma omp for reduction(+:normB)
+		for (size_t i = 0; i < N; ++i) {
+			double a = vectorAxn_b[i];
+			normB += (a * a);
+		}
+
+		while(1) {
+			setZeroVector(vectorAxn_b);
+			
+			#pragma omp for 
+			for (size_t i = 0; i < N; ++i) {
+				for (size_t j = 0; j < N; ++j) {
+					vectorAxn_b[i] += matrixA[i * N + j] * vectorX[j];
+				}
+			}
+
+			#pragma omp for 
+			for (size_t i = 0; i < N; ++i) {
+				vectorAxn_b[i] -= vectorB[i];
+			} 
+			
+			normAx_b = 0;
+			
+			#pragma omp for reduction(+:normAx_b)
+			for (size_t i = 0; i < N; ++i) {
+				double a = vectorAxn_b[i];
+				normAx_b += (a * a);
+			}
+
 			if (normAx_b / normB < epsilon) {
 				// printf("%ld\n", k);
 				break;
 			}
 
+			#pragma omp for 
 			for (size_t i = 0; i < N; ++i) {
 				vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
 			}
 		}
-		 
-	}
+
+	}*/
 	
 
 	// printVector(vectorX);
