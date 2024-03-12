@@ -6,7 +6,7 @@
 #include <time.h>
 
 #define PI 3.14159265358979323846
-#define N 1000
+#define N 2200 
 
 const double epsilon = 0.00001;
 const double tao = 0.0005;
