@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #define PI 3.14159265358979323846
 #define N 2200
@@ -74,6 +75,8 @@ int main() {
 	double *vectorB = calloc(sizeof(double), N);
 	double *vectorAxn_b = calloc(sizeof(double), N);
 
+	double startTime = clock();
+
 	setZeroVector(vectorB);
 	mulMatrixVector(matrixA, vectorU, vectorB);
 
@@ -94,6 +97,9 @@ int main() {
 			vectorX[i] = vectorX[i] - (tao * vectorAxn_b[i]);
 		}
 	}
+
+	double endTime = clock();
+	printf("%f\n", (endTime - startTime) / CLOCKS_PER_SEC);
 
 	// printVector(vectorX);
 
