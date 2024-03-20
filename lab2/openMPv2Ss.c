@@ -22,6 +22,8 @@ void setZeroVector(double *vector) {
 }
 
 int main(int argc, char *argv[]) {
+	if (argc == 0) exit(-1);
+	
 	double *matrixA = malloc(N * N * sizeof(double));
 	for (size_t i = 0; i < N; ++i) {
 		for (size_t j = 0; j < N; ++j) {
@@ -43,7 +45,7 @@ int main(int argc, char *argv[]) {
 	double *vectorB = calloc(sizeof(double), N);
 	double *vectorAxn_b = calloc(sizeof(double), N);
 
-	double startTime = omp_get_wtime(); 
+	volatile double startTime = omp_get_wtime(); 
 
 	double normAx_b = 0, normB = 0;
 	#pragma omp parallel
@@ -95,7 +97,7 @@ int main(int argc, char *argv[]) {
 
 	}
 
-	size_t endTime = omp_get_wtime();
+	volatile size_t endTime = omp_get_wtime();
     printf("%f\n", endTime - startTime);
 	// printVector(vectorX);
 

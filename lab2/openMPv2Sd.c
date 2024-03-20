@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 	double *vectorB = calloc(sizeof(double), N);
 	double *vectorAxn_b = calloc(sizeof(double), N);
 
-	double startTime = omp_get_wtime(); 
+	volatile double startTime = omp_get_wtime(); 
 
 	double normAx_b = 0, normB = 0;
 	#pragma omp parallel
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 
 	}
 
-	size_t endTime = omp_get_wtime();
+	volatile size_t endTime = omp_get_wtime();
     printf("%f\n", endTime - startTime);
 	// printVector(vectorX);
 
