@@ -18,6 +18,12 @@
 
 static int rank, sizeProccess;
 
+void breakProgramm() {
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Finalize();
+	exit(-1);
+}
+
 void printEnter() {
     printf("\n");
 }
@@ -31,18 +37,14 @@ void printMatrix(double *matrix, int n1, int n2) {
 	}
 }
 
+/*----------*/
+
 void fillMatrix(double *matrix, int n1, int n2) {
     for (int i = 0; i < n1; ++i) {
 		for (int j = 0; j < n2; ++j) {
 			matrix[i * n2 + j] = i + j;
 		}
 	}
-}
-
-void breakProgramm() {
-	MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Finalize();
-	exit(-1);
 }
 
 void initCommunicators(const int dims[DIMS_COUNT], MPI_Comm *commGrid, MPI_Comm *commRows, MPI_Comm *commColumns) {
@@ -61,6 +63,18 @@ void initCommunicators(const int dims[DIMS_COUNT], MPI_Comm *commGrid, MPI_Comm 
     MPI_Cart_sub(*commGrid, subDims, commColumns);    
 }
 
+void splitA(double *matrix1, double *matrix1Block, int matrix1BlockSize, 
+            int n2, int coordsY, MPI_Comm commRows, MPI_Comm commColumns) {
+    
+    if (coordsY == 0) {
+
+        MPI_Scatter(matrix1, matrix1BlockSize * n2, MPI_DOUBLE, matrix1Block, matrix1BlockSize * n2, MPI_DOUBLE, 0, commColumns);
+    
+    }
+
+    MPI_Bcast(matrix1Block, matrix1BlockSize * n2, MPI_DOUBLE, 0, commRows);
+}
+ 
 int main(int argc, char *argv[]) {
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &sizeProccess);
@@ -101,7 +115,8 @@ int main(int argc, char *argv[]) {
     double *matrix2Block = malloc(matrix2BlockSize * N2 * sizeof(double));
     double *matrix3Block = malloc(matrix1BlockSize * matrix2BlockSize * sizeof(double));
 
-    
+    splitA(matrix1, matrix1Block, matrix1BlockSize, N2, coords[Y], commRows, commColumns);
+    splitB();
 
     double finishTime = MPI_Wtime();
 
