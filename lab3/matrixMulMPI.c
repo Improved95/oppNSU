@@ -75,6 +75,47 @@ void splitA(double *matrix1, double *matrix1Block, int matrix1BlockSize,
     MPI_Bcast(matrix1Block, matrix1BlockSize * n2, MPI_DOUBLE, 0, commRows);
 }
  
+void splitB(double *matrix2, double *matrix2Block, int matrix2BlockSize, 
+            int n2, int alignedN3, int coordsX, MPI_Comm commRows, MPI_Comm commColumns) {
+    
+    if (coordsX == 0) {
+
+        MPI_Datatype columnNotResized;
+        MPI_Datatype columnResized;
+
+        MPI_Type_vector(N2, matrix2BlockSize, alignedN3, MPI_DOUBLE, &columnNotResized);
+        MPI_Type_commit(&columnNotResized);
+
+        MPI_Type_create_resized(columnNotResized, 0, matrix2BlockSize * sizeof(double), &columnResized);
+        MPI_Type_commit(&columnResized);
+
+        MPI_Scatter(matrix2, 1, columnResized, matrix2Block, matrix2BlockSize * N2, MPI_DOUBLE, 0, commRows);
+
+        MPI_Type_free(&columnNotResized);
+        MPI_Type_free(&columnResized);
+    }
+
+    MPI_Bcast(matrix2Block, matrix2BlockSize * N2, MPI_DOUBLE, 0, commColumns);
+}
+
+void multiply(double *matrix1Block, double *matrix2Block, double *matrix3Block, 
+                int matrix1BlockSize, int matrix2BlockSize, int n2) {
+    
+    memset(matrix3Block, 0, matrix1BlockSize * matrix2BlockSize * sizeof(double));
+
+    for (int i = 0; i < matrix1BlockSize; ++i) {
+        for (int j = 0; j < n2; ++j) {
+            for (int k = 0; k < matrix2BlockSize; ++k) {
+                matrix3Block[i * matrix2BlockSize + k] += matrix1Block[i * n2 + j] * matrix2Block[j * matrix2BlockSize + k];
+            }
+        }
+    }
+}
+
+void gatherC() {
+    
+}
+
 int main(int argc, char *argv[]) {
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &sizeProccess);
@@ -116,7 +157,11 @@ int main(int argc, char *argv[]) {
     double *matrix3Block = malloc(matrix1BlockSize * matrix2BlockSize * sizeof(double));
 
     splitA(matrix1, matrix1Block, matrix1BlockSize, N2, coords[Y], commRows, commColumns);
-    splitB();
+    splitB(matrix2, matrix2Block, matrix2BlockSize, N2, alignedN3, coords[X], commRows, commColumns);
+
+    multiply(matrix1Block, matrix2Block, matrix3Block, matrix1BlockSize, matrix2BlockSize, N2);
+
+    gather();
 
     double finishTime = MPI_Wtime();
 
