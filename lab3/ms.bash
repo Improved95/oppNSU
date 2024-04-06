@@ -1,4 +1,4 @@
 rm matrixMulMPI.out
 clear
-gcc matrixMulMPI.c -Wall -Werror -Wextra -O3 -o matrixMulMPI.out
-./matrixMulMPI.out
+mpicc matrixMulMPI.c -lm -Wall -Werror -Wextra -O2 -o matrixMulMPI.out
+mpiexec -n $1 ./matrixMulMPI.out

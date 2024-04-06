@@ -10,10 +10,8 @@
 #define Y 1
 
 #define N1 32
-#define N2 16
-
-#define M1 24
-#define M2 N1
+#define N2 24 
+#define N3 16
 
 #define DIMS_X 2
 #define DIMS_Y 2
@@ -30,6 +28,14 @@ void printMatrix(double *matrix, int n1, int n2) {
 			printf("%f ", matrix[i * n2 + j]);
 		}
 		printf("\n");
+	}
+}
+
+void fillMatrix(double *matrix, int n1, int n2) {
+    for (int i = 0; i < n1; ++i) {
+		for (int j = 0; j < n2; ++j) {
+			matrix[i * n2 + j] = i + j;
+		}
 	}
 }
 
@@ -60,26 +66,6 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &sizeProccess);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    double *matrix1 = NULL;
-    double *matrix2 = NULL;
-    double *matrix3 = NULL;
-    if (rank == 0) {
-
-        double *matrix1 = malloc(N1 * N2 * sizeof(double));
-        for (int i = 0; i < N1 * N2; ++i) {
-            matrix1[i] = i;
-        }
-
-        double *matrix2 = malloc(M1 * M2 * sizeof(double));
-        for (int i = 0; i < N1 * N2; ++i) {
-            matrix2[i] = i;
-        }
-
-        double *matrix2 = calloc(N2 * M1, sizeof(double));
-
-    }
-
-
     int dims[DIMS_COUNT] = {DIMS_X, DIMS_Y};
     MPI_Dims_create(sizeProccess, DIMS_COUNT, dims);
 
@@ -91,13 +77,31 @@ int main(int argc, char *argv[]) {
     int coords[DIMS_COUNT] = {};
     MPI_Cart_coords(commGrid, rank, DIMS_COUNT, coords);
 
+    double *matrix1 = NULL;
+    double *matrix2 = NULL;
+    double *matrix3 = NULL;
+    
+    int matrix1BlockSize = ceil((double) N1 / dims[X]);
+    int matrix2BlockSize = ceil((double) N3 / dims[Y]);
+    int alignedN1 = matrix1BlockSize * dims[X];
+    int alignedN3 = matrix2BlockSize * dims[Y];
+    if (rank == 0) {
+
+        matrix1 = malloc(alignedN1 * N2 * sizeof(double));
+        matrix2 = malloc(N2 * alignedN3 * sizeof(double));
+        matrix3 = malloc(alignedN1 * alignedN3 * sizeof(double));
+        
+        fillMatrix(matrix1, alignedN1, N2);
+        fillMatrix(matrix2, N2, alignedN3);
+    }
+
     double startTime = MPI_Wtime();
 
-    double *matrix1Block = NULL;
-    double *matrix2Block = NULL;
-    double *matrix3Block = NULL;
-    
+    double *matrix1Block = malloc(matrix1BlockSize * N2 * sizeof(double));
+    double *matrix2Block = malloc(matrix2BlockSize * N2 * sizeof(double));
+    double *matrix3Block = malloc(matrix1BlockSize * matrix2BlockSize * sizeof(double));
 
+    
 
     double finishTime = MPI_Wtime();
 
@@ -114,6 +118,9 @@ int main(int argc, char *argv[]) {
     free(matrix1Block);
     free(matrix2Block);
     free(matrix3Block);
+    MPI_Comm_free(&commGrid);
+    MPI_Comm_free(&commRows);
+    MPI_Comm_free(&commColumns);
 
     MPI_Finalize();
 	return 0;
