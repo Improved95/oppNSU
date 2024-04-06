@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
 
     multiply(matrix1Block, matrix2Block, matrix3Block, matrix1BlockSize, matrix2BlockSize, N2);
 
-    gather();
+    gatherV(matrix3Block, matrix3, matrix1Block, matrix2BlockSize, alignedN1, alignedN3, commGrid);
 
     double finishTime = MPI_Wtime();
 
