@@ -112,8 +112,35 @@ void multiply(double *matrix1Block, double *matrix2Block, double *matrix3Block,
     }
 }
 
-void gatherC() {
+void gatherV(double *matrix3Block, double *matrix3, int matrix1BlockSize, int matrix2BlockSize, 
+                int alignedN1, int alignedN3, MPI_Comm commGrid) {
     
+    MPI_Datatype notResizedRecv;
+    MPI_Datatype resizedRecv;
+
+    int dimsX = alignedN1 / matrix1BlockSize;
+    int dimsY = alignedN3 / matrix2BlockSize;
+    int *recvCounts = malloc(sizeProccess * sizeof(int));
+    int *displs = malloc(sizeProccess * sizeof(int));
+
+    MPI_Type_vector(matrix1BlockSize, matrix2BlockSize, alignedN3, MPI_DOUBLE, &notResizedRecv);
+    MPI_Type_commit(&notResizedRecv);
+
+    MPI_Type_create_resized(notResizedRecv, 0, matrix2BlockSize * sizeof(double), &resizedRecv);
+    MPI_Type_commit(&resizedRecv);
+
+    for (int i = 0; i < dimsX; ++i) {
+        for (int j = 0; j < dimsY; ++j) {
+            recvCounts[i * dimsY + j] = 1;
+            displs[i * dimsY + j] = j + i * dimsY * matrix1BlockSize;
+        }
+    }
+    MPI_Gatherv(matrix3Block, matrix1BlockSize * matrix2BlockSize, MPI_DOUBLE, matrix3, recvCounts, displs, resizedRecv, 0, commGrid);
+
+    MPI_Type_free(notResizedRecv);
+    MPI_Type_free(resizedRecv);
+    free(recvCounts);
+    free(displs);
 }
 
 int main(int argc, char *argv[]) {
