@@ -9,12 +9,12 @@
 #define X 0
 #define Y 1
 
-#define N1 32
-#define N2 24 
-#define N3 16
+#define N1 4400
+#define N2 10000
+#define N3 2200
 
-#define DIMS_X 2
-#define DIMS_Y 2
+#define DIMS_X 4
+#define DIMS_Y 4
 
 static int rank, sizeProccess;
 
@@ -24,10 +24,6 @@ void breakProgramm() {
 	exit(-1);
 }
 
-void printEnter() {
-    printf("\n");
-}
-
 void printMatrix(double *matrix, int n1, int n2) {
 	for (int i = 0; i < n1; ++i) {
 		for (int j = 0; j < n2; ++j) {
@@ -35,6 +31,7 @@ void printMatrix(double *matrix, int n1, int n2) {
 		}
 		printf("\n");
 	}
+    printf("\n");
 }
 
 /*----------*/
@@ -95,7 +92,7 @@ void splitB(double *matrix2, double *matrix2Block, int matrix2BlockSize,
         MPI_Type_free(&columnResized);
     }
 
-    MPI_Bcast(matrix2Block, matrix2BlockSize * N2, MPI_DOUBLE, 0, commColumns);
+    MPI_Bcast(matrix2Block, matrix2BlockSize * n2, MPI_DOUBLE, 0, commColumns);
 }
 
 void multiply(double *matrix1Block, double *matrix2Block, double *matrix3Block, 
@@ -137,8 +134,8 @@ void gatherV(double *matrix3Block, double *matrix3, int matrix1BlockSize, int ma
     }
     MPI_Gatherv(matrix3Block, matrix1BlockSize * matrix2BlockSize, MPI_DOUBLE, matrix3, recvCounts, displs, resizedRecv, 0, commGrid);
 
-    MPI_Type_free(notResizedRecv);
-    MPI_Type_free(resizedRecv);
+    MPI_Type_free(&notResizedRecv);
+    MPI_Type_free(&resizedRecv);
     free(recvCounts);
     free(displs);
 }
@@ -154,7 +151,7 @@ int main(int argc, char *argv[]) {
     MPI_Comm commGrid;
     MPI_Comm commRows;
     MPI_Comm commColumns;
-    initCommunicators(dims, commGrid, commRows, commColumns);
+    initCommunicators(dims, &commGrid, &commRows, &commColumns);
     
     int coords[DIMS_COUNT] = {};
     MPI_Cart_coords(commGrid, rank, DIMS_COUNT, coords);
@@ -177,6 +174,13 @@ int main(int argc, char *argv[]) {
         fillMatrix(matrix2, N2, alignedN3);
     }
 
+    // if (rank == 0) {
+
+    //     printMatrix(matrix1, alignedN1, N2);
+    //     printMatrix(matrix2, N2, alignedN3);
+
+    // }
+
     double startTime = MPI_Wtime();
 
     double *matrix1Block = malloc(matrix1BlockSize * N2 * sizeof(double));
@@ -188,9 +192,13 @@ int main(int argc, char *argv[]) {
 
     multiply(matrix1Block, matrix2Block, matrix3Block, matrix1BlockSize, matrix2BlockSize, N2);
 
-    gatherV(matrix3Block, matrix3, matrix1Block, matrix2BlockSize, alignedN1, alignedN3, commGrid);
+    gatherV(matrix3Block, matrix3, matrix1BlockSize, matrix2BlockSize, alignedN1, alignedN3, commGrid);
 
     double finishTime = MPI_Wtime();
+
+    // if (rank == 0) {
+    //     printMatrix(matrix3, alignedN1, alignedN3);
+    // }
 
     if (rank == 0) {
 
