@@ -10,11 +10,8 @@
 #define Y 1
 
 #define N1 4400
-#define N2 10000
+#define N2 6000
 #define N3 2200
-
-#define DIMS_X 4
-#define DIMS_Y 4
 
 static int rank, sizeProccess;
 
@@ -144,8 +141,11 @@ int main(int argc, char *argv[]) {
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &sizeProccess);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    
+    int dimsX = (int)sqrt(sizeProccess);
+    int dimsY = (int)sqrt(sizeProccess);
 
-    int dims[DIMS_COUNT] = {DIMS_X, DIMS_Y};
+    int dims[DIMS_COUNT] = {dimsX, dimsY};
     MPI_Dims_create(sizeProccess, DIMS_COUNT, dims);
 
     MPI_Comm commGrid;
