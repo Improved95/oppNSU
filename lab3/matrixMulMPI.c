@@ -9,9 +9,9 @@
 #define X 0
 #define Y 1
 
-#define N1 4400
+#define N1 4320
 #define N2 6000
-#define N3 2200
+#define N3 2280
 
 static int rank, sizeProccess;
 
@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
 
     if (rank == 0) {
 
-        printf("Time: %f\n", finishTime - startTime);
+        printf("%f\n", finishTime - startTime);
 
         free(matrix1);
         free(matrix2);
