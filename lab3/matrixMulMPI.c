@@ -10,7 +10,7 @@
 #define Y 1
 
 #define N1 4320
-#define N2 6000
+#define N2 9000
 #define N3 2280
 
 static int rank, sizeProccess;
