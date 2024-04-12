@@ -87,6 +87,7 @@ void splitB(double *matrix2, double *matrix2Block, int matrix2BlockSize,
 
         MPI_Type_free(&columnNotResized);
         MPI_Type_free(&columnResized);
+
     }
 
     MPI_Bcast(matrix2Block, matrix2BlockSize * n2, MPI_DOUBLE, 0, commColumns);
@@ -160,11 +161,11 @@ int main(int argc, char *argv[]) {
     double *matrix2 = NULL;
     double *matrix3 = NULL;
     
-    int matrix1BlockSize = ceil((double) N1 / dims[X]);
-    int matrix2BlockSize = ceil((double) N3 / dims[Y]);
+    int matrix1BlockSize = N1 / dims[X];
+    int matrix2BlockSize = N3 / dims[Y];
     int alignedN1 = matrix1BlockSize * dims[X];
     int alignedN3 = matrix2BlockSize * dims[Y];
-    if (rank == 0) {
+    if (coords[X] == 0 && coords[Y] == 0) {
 
         matrix1 = malloc(alignedN1 * N2 * sizeof(double));
         matrix2 = malloc(N2 * alignedN3 * sizeof(double));
@@ -172,6 +173,7 @@ int main(int argc, char *argv[]) {
         
         fillMatrix(matrix1, alignedN1, N2);
         fillMatrix(matrix2, N2, alignedN3);
+        
     }
 
     // if (rank == 0) {
