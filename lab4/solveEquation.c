@@ -93,7 +93,7 @@ void swap_func(double **prev_func, double **curr_func) {
 	*curr_func = tmp;
 }
 
-int calc_center(const double *prev_func, double *curr_func, int layer_height, int offset) {
+int calc_center(double *prev_func, double *curr_func, int layer_height, int offset) {
 	double f_i = 0.0;
 	double f_j = 0.0;
 	double f_k = 0.0;
@@ -121,7 +121,7 @@ int calc_center(const double *prev_func, double *curr_func, int layer_height, in
 	return max_diff;
 }
 
-int calc_border(const double *prev_func, double *curr_func, double *up_border_layer, double *down_border_layer, 
+int calc_border(double *prev_func, double *curr_func, double *up_border_layer, double *down_border_layer, 
 				int layer_height, int offset, int proc_count) {
 
 	double f_i = 0.0;
@@ -165,7 +165,7 @@ int calc_border(const double *prev_func, double *curr_func, double *up_border_la
 	return max_diff;
 }
 
-int calc_max_diff(const double *curr_func, int layer_height, int offset) {
+int calc_max_diff(double *curr_func, int layer_height, int offset) {
 	double tmp_max_delta = 0.0;
 	double max_proc_delta = 0.0;
 	double max_delta = 0.0;
