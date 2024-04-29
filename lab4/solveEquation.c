@@ -13,9 +13,9 @@
 #define D_Y (double)2.0
 #define D_Z (double)2.0
 
-#define N_X 400
-#define N_Y 400
-#define N_Z 400
+#define N_X 800
+#define N_Y 800
+#define N_Z 800
 
 #define H_X (D_X / (N_X - 1))
 #define H_Y (D_Y / (N_Y - 1))
@@ -60,13 +60,14 @@ double get_z(int k) {
     return Z_0 + k * H_Z;
 }
 
+double phi(double x, double y, double z) {
+    return x * x + y * y + z * z;
+}
+
 double rho(double x, double y, double z) {
     return 6 - A * phi(x, y, z);
 }
 
-double phi(double x, double y, double z) {
-    return x * x + y * y + z * z;
-}
 
 void init_layers(double *prev_func, double *curr_func, int layer_height, int offset) {
 	for (int i = 0; i < layer_height; ++i) {
@@ -149,7 +150,7 @@ int calc_border(double *prev_func, double *curr_func, double *up_border_layer, d
 			if (rank != proc_count - 1) {
 				f_i = (prev_func[get_index(layer_height - 2, j, k)] + down_border_layer[get_index(0, j, k)]) / H_X_2;
 				f_j = (prev_func[get_index(layer_height - 1, j + 1, k)] + prev_func[get_index(layer_height - 1, j - 1, k)]) / H_Y_2;
-				f_k - (prev_func[get_index(layer_height - 1, j, k + 1)] + prev_func[get_index(layer_height - 1, j, k - 1)]) / H_Z_2;
+				f_k = (prev_func[get_index(layer_height - 1, j, k + 1)] + prev_func[get_index(layer_height - 1, j, k - 1)]) / H_Z_2;
 			}
 
 			curr_func[get_index(layer_height - 1, j, k)] = (f_i + f_j + f_k - rho(get_x(offset + layer_height - 1), get_y(j), get_z(k))) /
@@ -213,7 +214,7 @@ int main(int argc, char *argv[]) {
 
 	prev_func = malloc(layer_heights[rank] * N_Y * N_Z * sizeof(double));
 	curr_func = malloc(layer_heights[rank] * N_Y * N_Z * sizeof(double));
-	init_layer(prev_func, curr_func, layer_heights[rank], offsets[rank]);
+	init_layers(prev_func, curr_func, layer_heights[rank], offsets[rank]);
 
 	up_border_layer = malloc(N_Y * N_Z * sizeof(double));
 	down_border_layer = malloc(N_Y * N_Z * sizeof(double));
@@ -237,7 +238,7 @@ int main(int argc, char *argv[]) {
 
 		if (rank != proc_count - 1) {
 			double *prev_down_border = prev_func + (layer_heights[rank] - 1) * N_Y * N_Z;
-			MPI_ISend(prev_down_border, N_Y * N_Z, MPI_DOUBLE, rank + 1, rank, MPI_COMM_WORLD, &send_down_req);
+			MPI_Isend(prev_down_border, N_Y * N_Z, MPI_DOUBLE, rank + 1, rank, MPI_COMM_WORLD, &send_down_req);
 			MPI_Irecv(down_border_layer, N_Y * N_Z, MPI_DOUBLE, rank + 1, rank + 1, MPI_COMM_WORLD, &recv_down_req);
 		}
 
@@ -270,7 +271,7 @@ int main(int argc, char *argv[]) {
 
 	if (rank == 0) {
 		printf("time: %f\n", end_time - start_time);
-		pritnf("max diff: %f", max_diff);
+		printf("max diff: %f", max_diff);
 	}
 
     MPI_Finalize();
