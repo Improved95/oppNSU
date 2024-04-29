@@ -165,7 +165,26 @@ int calc_border(const double *prev_func, double *curr_func, double *up_border_la
 	return max_diff;
 }
 
+int calc_max_diff(const double *curr_func, int layer_height, int offset) {
+	double tmp_max_delta = 0.0;
+	double max_proc_delta = 0.0;
+	double max_delta = 0.0;
 
+	for (int i = 0; i < layer_height; ++i) {
+		for (int j = 0; j < N_Y; ++j) {
+			for (int k = 0; k < N_Z; ++k) {
+				tmp_max_delta = fabs(curr_func[get_index(i, j, k)] - phi(get_x(offset + i), get_y(j), get_z(k)));
+				if (tmp_max_delta > max_proc_delta) {
+					max_proc_delta = tmp_max_delta;
+				}
+			}
+		}
+	}
+
+	MPI_Allreduce(&max_proc_delta, &max_delta, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+	return max_delta;
+}
 
 int main(int argc, char *argv[]) {
 	MPI_Init(&argc, &argv);
@@ -245,10 +264,14 @@ int main(int argc, char *argv[]) {
 	
 	swap_func(&prev_func, &curr_func);
 
-	max_diff = calc_max_diff();
+	max_diff = calc_max_diff(curr_func, layer_heights[rank], offsets[rank]);
 
 	double end_time = MPI_Wtime();
 
+	if (rank == 0) {
+		printf("time: %f\n", end_time - start_time);
+		pritnf("max diff: %f", max_diff);
+	}
 
     MPI_Finalize();
 	return 0;
