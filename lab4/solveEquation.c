@@ -13,9 +13,9 @@
 #define D_Y (double)2.0
 #define D_Z (double)2.0
 
-#define N_X 800
-#define N_Y 800
-#define N_Z 800
+#define N_X 750
+#define N_Y 750
+#define N_Z 750
 
 #define H_X (D_X / (N_X - 1))
 #define H_Y (D_Y / (N_Y - 1))
