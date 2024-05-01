@@ -13,9 +13,9 @@
 #define D_Y (double)2.0
 #define D_Z (double)2.0
 
-#define N_X 600
-#define N_Y 600
-#define N_Z 600
+#define N_X 1200
+#define N_Y 1200
+#define N_Z 1200
 
 #define H_X (D_X / (N_X - 1))
 #define H_Y (D_Y / (N_Y - 1))
@@ -26,7 +26,7 @@
 #define H_Z_2 (H_Z * H_Z)
 
 #define A (double)1.0E5
-#define EPSILON (double)1.0E-4
+#define EPSILON (double)1.0E-5
 
 static int rank, proc_count;
 
