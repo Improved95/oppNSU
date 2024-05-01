@@ -13,9 +13,9 @@
 #define D_Y (double)2.0
 #define D_Z (double)2.0
 
-#define N_X 1200
-#define N_Y 1200
-#define N_Z 1200
+#define N_X 1300
+#define N_Y 1300
+#define N_Z 1300
 
 #define H_X (D_X / (N_X - 1))
 #define H_Y (D_Y / (N_Y - 1))
@@ -26,7 +26,7 @@
 #define H_Z_2 (H_Z * H_Z)
 
 #define A (double)1.0E5
-#define EPSILON (double)1.0E-5
+#define EPSILON (double)1.0E-8
 
 static int rank, proc_count;
 
@@ -194,6 +194,7 @@ int main(int argc, char *argv[]) {
     double prev_proc_max_diff = EPSILON;
     double max_diff = 0.0;
     int *layer_heights = NULL;
+	int iterations_count = 0;
     int *offsets = NULL;
     double *up_border_layer = NULL;
     double *down_border_layer = NULL;
@@ -258,6 +259,7 @@ int main(int argc, char *argv[]) {
 
 		prev_proc_max_diff = fmax(tmp_max_diff_1, tmp_max_diff_2);
 
+		iterations_count++;
 	} while (max_diff >= EPSILON);
 	
 	swap_func(&prev_func, &curr_func);
@@ -268,7 +270,8 @@ int main(int argc, char *argv[]) {
 
 	if (rank == 0) {
 		printf("time: %f\n", end_time - start_time);
-		printf("max diff: %f", max_diff);
+		printf("max diff: %f\n", max_diff);
+		printf("iterations count: %d\n", iterations_count);
 	}
 
     MPI_Finalize();
