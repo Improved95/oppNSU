@@ -13,9 +13,9 @@
 #define D_Y (double)2.0
 #define D_Z (double)2.0
 
-#define N_X 1200
-#define N_Y 1200
-#define N_Z 1200
+#define N_X 600
+#define N_Y 600
+#define N_Z 600
 
 #define H_X (D_X / (N_X - 1))
 #define H_Y (D_Y / (N_Y - 1))
@@ -25,8 +25,8 @@
 #define H_Y_2 (H_Y * H_Y)
 #define H_Z_2 (H_Z * H_Z)
 
-#define A (double)100000
-#define EPSILON (double)0.00001
+#define A (double)1.0E5
+#define EPSILON (double)1.0E-4
 
 static int rank, proc_count;
 
@@ -67,7 +67,6 @@ double phi(double x, double y, double z) {
 double rho(double x, double y, double z) {
     return 6 - A * phi(x, y, z);
 }
-
 
 void init_layers(double *prev_func, double *curr_func, int layer_height, int offset) {
 	for (int i = 0; i < layer_height; ++i) {
@@ -209,7 +208,6 @@ int main(int argc, char *argv[]) {
 	layer_heights = malloc(proc_count * sizeof(int));
 	offsets = malloc(proc_count * sizeof(int));
 
-
     divide_area_into_layers(layer_heights, offsets);
 
 	prev_func = malloc(layer_heights[rank] * N_Y * N_Z * sizeof(double));
@@ -228,7 +226,6 @@ int main(int argc, char *argv[]) {
 		MPI_Iallreduce(&prev_proc_max_diff, &max_diff, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD, &reduce_max_diff_req);
 
 		swap_func(&prev_func, &curr_func);
-
 
 		if (rank != 0) {
 			double *prev_up_border = prev_func;
