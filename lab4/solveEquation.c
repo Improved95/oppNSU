@@ -13,9 +13,9 @@
 #define D_Y (double)2.0
 #define D_Z (double)2.0
 
-#define N_X 1300
-#define N_Y 1300
-#define N_Z 1300
+#define N_X 1200
+#define N_Y 1200
+#define N_Z 1200
 
 #define H_X (D_X / (N_X - 1))
 #define H_Y (D_Y / (N_Y - 1))
@@ -26,7 +26,7 @@
 #define H_Z_2 (H_Z * H_Z)
 
 #define A (double)1.0E5
-#define EPSILON (double)1.0E-8
+#define EPSILON (double)1.0E-5
 
 static int rank, proc_count;
 
@@ -150,14 +150,14 @@ int calc_border(double *prev_func, double *curr_func, double *up_border_layer, d
 				f_i = (prev_func[get_index(layer_height - 2, j, k)] + down_border_layer[get_index(0, j, k)]) / H_X_2;
 				f_j = (prev_func[get_index(layer_height - 1, j + 1, k)] + prev_func[get_index(layer_height - 1, j - 1, k)]) / H_Y_2;
 				f_k = (prev_func[get_index(layer_height - 1, j, k + 1)] + prev_func[get_index(layer_height - 1, j, k - 1)]) / H_Z_2;
-			}
 
-			curr_func[get_index(layer_height - 1, j, k)] = (f_i + f_j + f_k - rho(get_x(offset + layer_height - 1), get_y(j), get_z(k))) /
-																(2 / H_X_2 + 2 / H_Y_2 + 2 / H_Z_2 + A);
+				curr_func[get_index(layer_height - 1, j, k)] = (f_i + f_j + f_k - rho(get_x(offset + layer_height - 1), get_y(j), get_z(k))) /
+																	(2 / H_X_2 + 2 / H_Y_2 + 2 / H_Z_2 + A);
 
-			tmp_max_diff = fabs(curr_func[get_index(layer_height - 1, j, k)] - prev_func[get_index(layer_height - 1, j, k)]);
-			if (tmp_max_diff > max_diff) {
-				max_diff = tmp_max_diff;
+				tmp_max_diff = fabs(curr_func[get_index(layer_height - 1, j, k)] - prev_func[get_index(layer_height - 1, j, k)]);
+				if (tmp_max_diff > max_diff) {
+					max_diff = tmp_max_diff;
+				}
 			}
 		}
 	}
@@ -273,6 +273,13 @@ int main(int argc, char *argv[]) {
 		printf("max diff: %f\n", max_diff);
 		printf("iterations count: %d\n", iterations_count);
 	}
+
+	free(layer_heights);
+	free(offsets);
+	free(prev_func);
+	free(curr_func);
+	free(up_border_layer);
+	free(down_border_layer);
 
     MPI_Finalize();
 	return 0;
