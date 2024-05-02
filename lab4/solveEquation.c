@@ -98,8 +98,8 @@ double calc_center(const double *prev_func, double *curr_func, int layer_height,
     double tmp_max_diff = 0.0;
     double max_diff = 0.0;
 
-    for (int i = 1; i < layer_height - 1; ++i)
-        for (int j = 1; j < N_Y - 1; ++j)
+    for (int i = 1; i < layer_height - 1; ++i) {
+        for (int j = 1; j < N_Y - 1; ++j) {
             for (int k = 1; k < N_Z - 1; ++k) {
                 f_i = (prev_func[get_index(i + 1, j, k)] + prev_func[get_index(i - 1, j, k)]) / H_X_2;
                 f_j = (prev_func[get_index(i, j + 1, k)] + prev_func[get_index(i, j - 1, k)]) / H_Y_2;
@@ -112,7 +112,9 @@ double calc_center(const double *prev_func, double *curr_func, int layer_height,
                 if (tmp_max_diff > max_diff)
                     max_diff = tmp_max_diff;
             }
-
+		}
+	}
+	
     return max_diff;
 }
 
@@ -125,19 +127,20 @@ double calc_border(const double *prev_func, double *curr_func, double *up_border
     double tmp_max_diff = 0.0;
     double max_diff = 0.0;
 
-    for (int j = 1; j < N_Y - 1; ++j)
+    for (int j = 1; j < N_Y - 1; ++j) {
         for (int k = 1; k < N_Z - 1; ++k) {
             if (rank != 0) {
                 f_i = (prev_func[get_index(1, j, k)] + up_border_layer[get_index(0, j, k)]) / H_X_2;
                 f_j = (prev_func[get_index(0, j + 1, k)] + prev_func[get_index(0, j - 1, k)]) / H_Y_2;
                 f_k = (prev_func[get_index(0, j, k + 1)] + prev_func[get_index(0, j, k - 1)]) / H_Z_2;
 
-                curr_func[get_index(0, j, k)] =
-                    (f_i + f_j + f_k - rho(get_x(offset), get_y(j), get_z(k))) / (2 / H_X_2 + 2 / H_Y_2 + 2 / H_Z_2 + A);
+                curr_func[get_index(0, j, k)] = (f_i + f_j + f_k - rho(get_x(offset), get_y(j), get_z(k))) 
+													/ (2 / H_X_2 + 2 / H_Y_2 + 2 / H_Z_2 + A);
 
                 tmp_max_diff = fabs(curr_func[get_index(0, j, k)] - prev_func[get_index(0, j, k)]);
-                if (tmp_max_diff > max_diff)
+                if (tmp_max_diff > max_diff) {
                     max_diff = tmp_max_diff;
+				}
             }
 
             if (rank != proc_count - 1) {
@@ -145,14 +148,16 @@ double calc_border(const double *prev_func, double *curr_func, double *up_border
                 f_j = (prev_func[get_index(layer_height - 1, j + 1, k)] + prev_func[get_index(layer_height - 1, j - 1, k)]) / H_Y_2;
                 f_k = (prev_func[get_index(layer_height - 1, j, k + 1)] + prev_func[get_index(layer_height - 1, j, k - 1)]) / H_Z_2;
 
-                curr_func[get_index(layer_height - 1, j, k)] =
-                    (f_i + f_j + f_k - rho(get_x(offset + layer_height - 1), get_y(j), get_z(k))) / (2 / H_X_2 + 2 / H_Y_2 + 2 / H_Z_2 + A);
+                curr_func[get_index(layer_height - 1, j, k)] = (f_i + f_j + f_k - rho(get_x(offset + layer_height - 1), get_y(j), get_z(k))) 
+																	/ (2 / H_X_2 + 2 / H_Y_2 + 2 / H_Z_2 + A);
 
                 tmp_max_diff = fabs(curr_func[get_index(layer_height - 1, j, k)] - prev_func[get_index(layer_height - 1, j, k)]);
-                if (tmp_max_diff > max_diff)
+                if (tmp_max_diff > max_diff) {
                     max_diff = tmp_max_diff;
+				}
             }
         }
+	}
 
     return max_diff;
 }
