@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
         }
 
         tmp_max_diff_2 = calc_border(prev_func, curr_func, up_border_layer, down_border_layer,
-                                   layer_heights[rank], offsets[rank], rank);
+                                   layer_heights[rank], offsets[rank]);
 
         MPI_Wait(&reduce_max_diff_req, MPI_STATUS_IGNORE);
 
