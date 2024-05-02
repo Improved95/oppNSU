@@ -208,16 +208,16 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &proc_count);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    layer_heights = malloc(sizeof(int) * proc_count);
-    offsets = malloc(sizeof(int) * proc_count);
+    layer_heights = malloc(proc_count * sizeof(int));
+    offsets = malloc(proc_count * sizeof(int));
     divide_area_into_layers(layer_heights, offsets);
 
-    prev_func = malloc(sizeof(double) * layer_heights[rank] * N_Y * N_Z);
-    curr_func = malloc(sizeof(double) * layer_heights[rank] * N_Y * N_Z);
+    prev_func = malloc(N_Y * N_Z * layer_heights[rank] * sizeof(double));
+    curr_func = malloc(N_Y * N_Z * layer_heights[rank] * sizeof(double));
     init_layers(prev_func, curr_func, layer_heights[rank], offsets[rank]);
 
-    up_border_layer = malloc(sizeof(double) * N_Y * N_Z);
-    down_border_layer = malloc(sizeof(double) * N_Y * N_Z);
+    up_border_layer = malloc(N_Y * N_Z * sizeof(double));
+    down_border_layer = malloc(N_Y * N_Z * sizeof(double));
 
     start_time = MPI_Wtime();
 
