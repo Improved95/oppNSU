@@ -1,4 +1,0 @@
-/home/opp112/opp/oppNSU/lab5/target/CMakeFiles/corelib.dir
-/home/opp112/opp/oppNSU/lab5/target/CMakeFiles/lab5.dir
-/home/opp112/opp/oppNSU/lab5/target/CMakeFiles/edit_cache.dir
-/home/opp112/opp/oppNSU/lab5/target/CMakeFiles/rebuild_cache.dir
