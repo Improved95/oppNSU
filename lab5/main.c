@@ -8,6 +8,7 @@
 #include "queue.h"
 
 int main() {
-    coutHelloWorld();
+    
+
     return 0;
 }
