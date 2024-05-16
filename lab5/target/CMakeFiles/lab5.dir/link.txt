@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/lab5.dir/main.c.o CMakeFiles/corelib.dir/queue.c.o -o lab5 
