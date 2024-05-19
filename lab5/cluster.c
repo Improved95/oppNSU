@@ -104,7 +104,7 @@ void task_queue_destroy(Task_Queue **task_queue) {
 /* TASK QUEUE */
 
 #define TASK_COUNT              2000
-#define TOTAL_SUM_WEIGHT        50000000 * 1.5
+#define TOTAL_SUM_WEIGHT        1000000
 #define REQUEST_TAG             0
 #define RESPONSE_TAG            1
 #define EMPTY_QUEUE_RESPONSE    (-1)
@@ -118,6 +118,8 @@ Task_Queue *task_queue;
 pthread_mutex_t mutex;
 pthread_cond_t worker_cond;
 pthread_cond_t receiver_cond;
+
+static double global_res = 0; 
 
 static inline void init_tasks() {
     int min_weight = 2 * TOTAL_SUM_WEIGHT / (TASK_COUNT * (process_count + 1));
@@ -149,7 +151,10 @@ static inline void execute_tasks() {
         }
         task_queue_pop(task_queue, &task);
         pthread_mutex_unlock(&mutex);
-        usleep(task.weight);
+        // usleep(task.weight);
+        for (int i = 0; i < task.weight; ++i) {
+            global_res += sqrt(i);
+        }
     }
 }
 
