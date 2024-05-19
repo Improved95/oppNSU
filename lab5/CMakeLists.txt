@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.5.1)
-project(lab5)
+cmake_minimum_required(VERSION 3.16.3)
+project(cluster)
 set(exe_name ${PROJECT_NAME})
 
 if (MSVC)
@@ -10,6 +10,15 @@ else()
     add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
-add_library(corelib OBJECT queue.c)
+find_package(MPI REQUIRED)
+find_package(Threads REQUIRED)
+
+add_library(task_queue STATIC task_queue.c)
+
 add_executable(${exe_name} main.c)
-target_link_libraries(${exe_name} corelib)
+
+target_include_directories(${exe_name} PUBLIC ${MPI_C_INCLUDE_DIRS})
+target_link_libraries(${exe_name}
+        PUBLIC task_queue
+        PUBLIC MPI::MPI_C
+        PUBLIC Threads::Threads)

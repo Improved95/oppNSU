@@ -26,22 +26,22 @@ pthread_mutex_t mutex;
 pthread_cond_t worker_cond;
 pthread_cond_t receiver_cond;
 
-static inline init_tasks() {
+tatic inline void init_tasks() {
     const int TOTAL_SUM_WEIGHT = 50000000;
     int min_weight = 2 * TOTAL_SUM_WEIGHT / (TASK_COUNT * (process_count + 1));
     int task_id = 1;
 
     for (int i = 0; i < TASK_COUNT; ++i) {
         Task task = {
-            .id = task_id;
-            .process_id = process_id;
-            .weight = min_weight * (i % process_count + 1);
+            .id = task_id,
+            .process_id = process_id,
+            .weight = min_weight * (i % process_count + 1)
         };
 
         if (i % process_count == process_id) {
             task_queue_push(task_queue, task);
             task_id++;
-            process_sum_weight += task.weight;
+            proc_sum_weight += task.weight;
         }
     }
 }
@@ -56,13 +56,13 @@ static inline void execute_tasks() {
             break;
         }
         task_queue_pop(task_queue, &task);
-        pthread_mutex_unlock(%mutex);
+        pthread_mutex_unlock(&mutex);
 
-        printf(FBLUE"Worker %d execucting task %s of process %d and weight %d\n"FNORM,
-                process_id,
-                task.id,
-                task.process_id,
-                task.weight);
+        printf(FBLUE"Worker %d executing task %d of process %d and weight %d\n"FNORM,
+               process_id,
+               task.id,
+               task.process_id,
+               task.weight);
         usleep(task.weight);
     }
 }
@@ -74,7 +74,7 @@ void *worker_start(void *args) {
 
     while (true) {
         execute_tasks();
-        pthread_nutex_lock(%mutex);
+        pthread_nutex_lock(&mutex);
         while (task_queue_is_empty(task_queue) && !termination) {
             pthread_cond_signal(&receive_cond);
             pthread_cond_wait(&worker_cond, &mutex);
