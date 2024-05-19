@@ -103,8 +103,8 @@ void task_queue_destroy(Task_Queue **task_queue) {
 
 /* TASK QUEUE */
 
-#define TASK_COUNT              2000
-#define TOTAL_SUM_WEIGHT        1000000
+#define TASK_COUNT              10000
+#define TOTAL_SUM_WEIGHT        500000000
 #define REQUEST_TAG             0
 #define RESPONSE_TAG            1
 #define EMPTY_QUEUE_RESPONSE    (-1)
@@ -153,7 +153,13 @@ static inline void execute_tasks() {
         pthread_mutex_unlock(&mutex);
         // usleep(task.weight);
         for (int i = 0; i < task.weight; ++i) {
-            global_res += sqrt(i);
+            global_res += sqrt(sqrt(sqrt(i)));
+            global_res += sqrt(sqrt(sqrt(i)));
+            global_res += sqrt(sqrt(sqrt(i)));
+            global_res += sqrt(sqrt(sqrt(i)));
+            global_res += sqrt(sqrt(sqrt(i)));
+            global_res += sqrt(sqrt(sqrt(i)));
+            global_res += sqrt(sqrt(sqrt(i)));
         }
     }
 }
