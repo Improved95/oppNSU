@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <mpi.h>
-#include <mpich/mpi.h>
+// #include <mpich/mpi.h>
 #include <pthread.h>
 
 #include "task_queue.h"
@@ -20,13 +20,13 @@
 static int process_id, process_count;
 static int process_sum_weight;
 bool termination = false;
-Task_Queue task_queue;
+Task_Queue *task_queue;
 
 pthread_mutex_t mutex;
 pthread_cond_t worker_cond;
 pthread_cond_t receiver_cond;
 
-tatic inline void init_tasks() {
+static inline void init_tasks() {
     const int TOTAL_SUM_WEIGHT = 50000000;
     int min_weight = 2 * TOTAL_SUM_WEIGHT / (TASK_COUNT * (process_count + 1));
     int task_id = 1;
@@ -41,7 +41,7 @@ tatic inline void init_tasks() {
         if (i % process_count == process_id) {
             task_queue_push(task_queue, task);
             task_id++;
-            proc_sum_weight += task.weight;
+            process_sum_weight += task.weight;
         }
     }
 }
@@ -74,16 +74,24 @@ void *worker_start(void *args) {
 
     while (true) {
         execute_tasks();
-        pthread_nutex_lock(&mutex);
+        pthread_mutex_lock(&mutex);
         while (task_queue_is_empty(task_queue) && !termination) {
-            pthread_cond_signal(&receive_cond);
+            pthread_cond_signal(&receiver_cond);
             pthread_cond_wait(&worker_cond, &mutex);
         }
-        pthread_Mutex_unlock(&mutex);
+        pthread_mutex_unlock(&mutex);
     }
 }
 
-int main() {
+void *receiver_start() {
+
+}
+ 
+void *sender_start() {
+
+}
+
+int main(int argc, char **argv) {
     int required = MPI_THREAD_MULTIPLE;
     int provided;
     double start_time;
@@ -116,7 +124,7 @@ int main() {
     end_time = MPI_Wtime();
 
     MPI_Barrier(MPI_COMM_WORLD);
-    printf(FGREEN"Summary weight %d: %lf\n"FNORM, process_id, proc_sum_weight * 1E-6);
+    printf(FGREEN"Summary weight %d: %lf\n"FNORM, process_id, process_sum_weight * 1E-6);
     MPI_Barrier(MPI_COMM_WORLD);
     if (process_id == 0) {
         printf(FGREEN"Time: %lf\n"FNORM, end_time - start_time);

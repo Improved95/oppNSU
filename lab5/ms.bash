@@ -1,0 +1,1 @@
+cmake ../../oppNSU/lab5
