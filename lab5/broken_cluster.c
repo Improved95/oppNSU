@@ -169,8 +169,8 @@ void *worker_start() {
         execute_tasks();
         pthread_mutex_lock(&mutex);
         while (task_queue_is_empty(task_queue) && !termination) {
-            pthread_cond_signal(&receiver_cond);
-            pthread_cond_wait(&worker_cond, &mutex);
+            // pthread_cond_signal(&receiver_cond);
+            // pthread_cond_wait(&worker_cond, &mutex);
         }
 
         if (termination) {
@@ -264,8 +264,8 @@ int main(int argc, char **argv) {
     double start_time;
     double end_time;
     pthread_t worker_thread;
-    pthread_t receiver_thread;
-    pthread_t sender_thread;
+    // pthread_t receiver_thread;
+    // pthread_t sender_thread;
 
     MPI_Init_thread(&argc, &argv, required, &provided);
     if (provided != required) {
@@ -282,12 +282,12 @@ int main(int argc, char **argv) {
 
     start_time = MPI_Wtime();
     pthread_create(&worker_thread, NULL, worker_start, NULL);
-    pthread_create(&receiver_thread, NULL, receiver_start, NULL);
-    pthread_create(&sender_thread, NULL, sender_start, NULL);
+    // pthread_create(&receiver_thread, NULL, receiver_start, NULL);
+    // pthread_create(&sender_thread, NULL, sender_start, NULL);
 
     pthread_join(worker_thread, NULL);
-    pthread_join(receiver_thread, NULL);
-    pthread_join(sender_thread, NULL);
+    // pthread_join(receiver_thread, NULL);
+    // pthread_join(sender_thread, NULL);
     end_time = MPI_Wtime();
 
     MPI_Barrier(MPI_COMM_WORLD);
