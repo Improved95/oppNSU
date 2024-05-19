@@ -58,16 +58,13 @@ static inline void execute_tasks() {
         task_queue_pop(task_queue, &task);
         pthread_mutex_unlock(&mutex);
 
-        printf(FBLUE"Worker %d executing task %d of process %d and weight %d\n"FNORM,
-               process_id,
-               task.id,
-               task.process_id,
-               task.weight);
+        printf(FBLUE"Worker %d executing task %d of process %d and weight %d\n"FNORM, process_id, task.id, 
+                    task.process_id, task.weight);
         usleep(task.weight);
     }
 }
 
-void *worker_start(void *args) {
+void *worker_start() {
     init_tasks();
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -79,16 +76,107 @@ void *worker_start(void *args) {
             pthread_cond_signal(&receiver_cond);
             pthread_cond_wait(&worker_cond, &mutex);
         }
+
+        if (termination) {
+            pthread_mutex_unlock(&mutex);
+            break;
+        }
         pthread_mutex_unlock(&mutex);
     }
+
+    printf(FBLUE"Worker %d finished\n"FNORM, process_id);
+    pthread_exit(NULL);
 }
 
 void *receiver_start() {
+    int termination_signal = TERMINATION_SIGNAL;
 
+    while (!termination) {
+        int received_tasks = 0;
+        Task task;
+
+        pthread_mutex_lock(&mutex);
+        while (!task_queue_is_empty(task_queue)) {
+            pthread_cond_wait(&receiver_cond, &mutex);
+        }
+        pthread_mutex_unlock(&mutex);
+
+        for (int i = 0; i < process_count; ++i) {
+            if (i == process_id) {
+                continue;
+            }
+
+            printf(FYELLOW"Receiver %d sent request to process %d\n"FNORM, process_id, i);
+            MPI_Send(&process_id, 1, MPI_INT, i, REQUEST_TAG, MPI_COMM_WORLD);
+            MPI_Recv(&task, sizeof(task), MPI_BYTE, i , RESPONSE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            if (task.id != EMPTY_QUEUE_RESPONSE) {
+                printf(FYELLOW"Receiver %d received task %d from process %d\n"FNORM, process_id, task.id, i);
+                
+                pthread_mutex_lock(&mutex);
+                task_queue_push(task_queue, task);
+                pthread_mutex_unlock(&mutex);
+
+                received_tasks++;
+            } else {
+                printf(FYELLOW"Receiver %d received empty queue response from process %d\n"FNORM, process_id, i);
+            }
+        }
+
+        if (received_tasks == 0) {
+            pthread_mutex_lock(&mutex);
+            termination = true;
+            pthread_mutex_unlock(&mutex);
+        }
+
+        pthread_mutex_lock(&mutex);
+        pthread_cond_signal(&worker_cond);
+        pthread_mutex_unlock(&mutex);
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    printf(FYELLOW"Receiver %d sent termination signal\n"FNORM, process_id);
+    MPI_Send(&termination_signal, 1, MPI_INT, process_id, REQUEST_TAG, MPI_COMM_WORLD);
+
+    printf(FYELLOW"Receiver %d finished\n"FNORM, process_id);
+    pthread_exit(NULL);
 }
  
 void *sender_start() {
+    while (true) {
+        int receive_process_id;
 
+        Task task;
+
+        printf(FMAGENTA"Sender %d waiting for request\n"FNORM, process_id);
+        MPI_Recv(&receive_process_id, 1, MPI_INT, MPI_ANY_SOURCE, REQUEST_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        if (receive_process_id == TERMINATION_SIGNAL) {
+            printf(FMAGENTA"Sender %d received termination signal\n"FNORM, process_id);
+            break;
+        }
+
+        printf(FMAGENTA"Sender %d received request from process %d\n"FNORM, process_id, receive_process_id);
+
+        pthread_mutex_lock(&mutex);
+        if (!task_queue_is_empty(task_queue)) {
+            task_queue_pop(task_queue, &task);
+            printf(FMAGENTA"Sender %d sent task %d of process %d to process %d\n"FNORM, process_id, task.id, 
+                        task.process_id, receive_process_id);
+        } else {
+            task.id = EMPTY_QUEUE_RESPONSE;
+            task.weight = 0;
+            task.process_id = process_id;
+            printf(FMAGENTA"Sender %d sent empty queue response to process %d\n"FNORM, process_id, receive_process_id);
+        }
+        pthread_mutex_unlock(&mutex);
+
+        MPI_Send(&task, sizeof(task), MPI_BYTE, receive_process_id, RESPONSE_TAG, MPI_COMM_WORLD);
+    } 
+
+    printf(FMAGENTA"Sender %d finished\n"FNORM, process_id);
+    pthread_exit(NULL);
 }
 
 int main(int argc, char **argv) {
