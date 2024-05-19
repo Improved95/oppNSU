@@ -8,8 +8,6 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include "color.h"
-
 /* TASK QUEUE */
 
 #define SUCCESS 0
@@ -175,7 +173,7 @@ void *worker_start() {
         pthread_mutex_unlock(&mutex);
     }
 
-    printf(FBLUE"Worker %d finished\n"FNORM, process_id);
+    printf("Worker %d finished\n", process_id);
     pthread_exit(NULL);
 }
 
@@ -286,10 +284,10 @@ int main(int argc, char **argv) {
     end_time = MPI_Wtime();
 
     MPI_Barrier(MPI_COMM_WORLD);
-    printf(FGREEN"Summary weight %d: %d\n"FNORM, process_id, process_sum_weight /** 1E-6*/);
+    printf("Summary weight %d: %d\n", process_id, process_sum_weight /** 1E-6*/);
     MPI_Barrier(MPI_COMM_WORLD);
     if (process_id == 0) {
-        printf(FGREEN"Time: %lf\n"FNORM, end_time - start_time);
+        printf("Time: %lf\n", end_time - start_time);
     }
     
     task_queue_destroy(&task_queue);
