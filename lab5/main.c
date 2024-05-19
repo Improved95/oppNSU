@@ -11,6 +11,7 @@
 #include "color.h"
 
 #define TASK_COUNT              2000
+#define TOTAL_SUM_WEIGHT        50000000 * 1.5
 #define REQUEST_TAG             0
 #define RESPONSE_TAG            1
 #define EMPTY_QUEUE_RESPONSE    (-1)
@@ -26,7 +27,6 @@ pthread_cond_t worker_cond;
 pthread_cond_t receiver_cond;
 
 static inline void init_tasks() {
-    const int TOTAL_SUM_WEIGHT = 50000000;
     int min_weight = 2 * TOTAL_SUM_WEIGHT / (TASK_COUNT * (process_count + 1));
     int task_id = 1;
 
@@ -191,7 +191,7 @@ int main(int argc, char **argv) {
     end_time = MPI_Wtime();
 
     MPI_Barrier(MPI_COMM_WORLD);
-    printf(FGREEN"Summary weight %d: %lf\n"FNORM, process_id, process_sum_weight * 1E-6);
+    printf(FGREEN"Summary weight %d: %d\n"FNORM, process_id, process_sum_weight /** 1E-6*/);
     MPI_Barrier(MPI_COMM_WORLD);
     if (process_id == 0) {
         printf(FGREEN"Time: %lf\n"FNORM, end_time - start_time);
