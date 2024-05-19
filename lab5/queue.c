@@ -23,20 +23,20 @@ Task_Queue *task_queue_create(int capacity) {
     return task_queue;
 }
 
-bool is_empty(const Task_Queue *task_queue) {
+bool task_queue_is_empty(const Task_Queue *task_queue) {
     return task_queue->size == 0;
 }
 
-bool is_full(const Task_Queue *task_queue) {
+bool task_queue_is_full(const Task_Queue *task_queue) {
     return task_queue->size == task_queue->capacity;
 }
 
-int push(Task_Queue *task_queue, Task task) {
+int task_queue_push(Task_Queue *task_queue, Task task) {
     if (task_queue == NULL) {
         return ERROR;
     }
 
-    if (is_full(task_queue)) {
+    if (task_queue_is_full(task_queue)) {
         return ERROR;
     }
 
@@ -47,12 +47,12 @@ int push(Task_Queue *task_queue, Task task) {
     return SUCCESS;
 }
 
-int pop(Task_Queue *task_queue, Task *task) {
+int task_queue_pop(Task_Queue *task_queue, Task *task) {
     if (task_queue == NULL) {
         return ERROR;
     }
 
-    if (is_empty(task_queue)) {
+    if (task_queue_is_empty(task_queue)) {
         return ERROR;
     }
 
@@ -63,7 +63,7 @@ int pop(Task_Queue *task_queue, Task *task) {
     return SUCCESS;
 }
 
-void destroy(Task_Queue **task_queue) {
+void task_queue_destroy(Task_Queue **task_queue) {
     if (*task_queue == NULL) {
         return;
     }

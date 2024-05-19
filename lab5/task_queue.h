@@ -20,10 +20,10 @@ typedef struct {
 } Task_Queue;
 
 Task_Queue *task_queue_create(int capacity);
-bool is_empty(const Task_Queue *task_queue);
-bool is_full(const Task_Queue *task_queue);
-int push(Task_Queue *task_queue, Task task);
-int pop(Task_Queue *task_queue, Task *task);
-void destroy(Task_Queue **task_queue);
+bool task_queue_is_empty(const Task_Queue *task_queue);
+bool task_queue_is_full(const Task_Queue *task_queue);
+int task_queue_push(Task_Queue *task_queue, Task task);
+int task_queue_pop(Task_Queue *task_queue, Task *task);
+void task_queue_destroy(Task_Queue **task_queue);
 
 #endif
