@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <mpi.h>
-// #include <mpich/mpi.h>
 #include <pthread.h>
 
 #include "task_queue.h"

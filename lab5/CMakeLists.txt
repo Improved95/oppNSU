@@ -11,10 +11,10 @@ else()
 endif()
 
 find_package(MPI REQUIRED)
-# find_package(Threads REQUIRED)
+find_package(Threads REQUIRED)
 
 add_library(task_queue STATIC task_queue.c)
 add_executable(${exe_name} main.c)
 
-include_directories(SYSTEM ${MPI_INCLUDE_PATH})
-target_link_libraries(${exe_name} PUBLIC task_queue)
+include_directories(PUBLIC ${MPI_INCLUDE_PATH})
+target_link_libraries(${exe_name} PUBLIC task_queue PUBLIC ${MPI_C_LIBRARIES} PUBLIC Threads::Threads)
