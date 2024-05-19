@@ -290,11 +290,15 @@ int main(int argc, char **argv) {
     pthread_join(sender_thread, NULL);
     end_time = MPI_Wtime();
 
+    double time = end_time - start_time;
+    double finalTime = 0;
+	MPI_Reduce(&time, &finalTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
     MPI_Barrier(MPI_COMM_WORLD);
     printf("Summary weight %d: %d\n", process_id, process_sum_weight);
     MPI_Barrier(MPI_COMM_WORLD);
     if (process_id == 0) {
-        printf("Time: %lf\n", end_time - start_time);
+        printf("Time: %lf\n", finalTime);
     }
     
     task_queue_destroy(&task_queue);

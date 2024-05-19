@@ -115,9 +115,9 @@ static int process_sum_weight;
 bool termination = false;
 Task_Queue *task_queue;
 
-pthread_mutex_t mutex;
-pthread_cond_t worker_cond;
-pthread_cond_t receiver_cond;
+// pthread_mutex_t mutex;
+// pthread_cond_t worker_cond;
+// pthread_cond_t receiver_cond;
 
 static double global_res = 0;
 
@@ -192,11 +192,11 @@ void *receiver_start() {
         int received_tasks = 0;
         Task task;
 
-        pthread_mutex_lock(&mutex);
+        // pthread_mutex_lock(&mutex);
         while (!task_queue_is_empty(task_queue)) {
-            pthread_cond_wait(&receiver_cond, &mutex);
+            // pthread_cond_wait(&receiver_cond, &mutex);
         }
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
 
         for (int i = 0; i < process_count; ++i) {
             if (i == process_id) {
@@ -207,23 +207,23 @@ void *receiver_start() {
             MPI_Recv(&task, sizeof(task), MPI_BYTE, i , RESPONSE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             if (task.id != EMPTY_QUEUE_RESPONSE) {
-                pthread_mutex_lock(&mutex);
+                // pthread_mutex_lock(&mutex);
                 task_queue_push(task_queue, task);
-                pthread_mutex_unlock(&mutex);
+                // pthread_mutex_unlock(&mutex);
 
                 received_tasks++;
             }
         }
 
         if (received_tasks == 0) {
-            pthread_mutex_lock(&mutex);
+            // pthread_mutex_lock(&mutex);
             termination = true;
-            pthread_mutex_unlock(&mutex);
+            // pthread_mutex_unlock(&mutex);
         }
 
-        pthread_mutex_lock(&mutex);
-        pthread_cond_signal(&worker_cond);
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_lock(&mutex);
+        // pthread_cond_signal(&worker_cond);
+        // pthread_mutex_unlock(&mutex);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -243,7 +243,7 @@ void *sender_start() {
             break;
         }
 
-        pthread_mutex_lock(&mutex);
+        // pthread_mutex_lock(&mutex);
         if (!task_queue_is_empty(task_queue)) {
             task_queue_pop(task_queue, &task);
         } else {
@@ -251,7 +251,7 @@ void *sender_start() {
             task.weight = 0;
             task.process_id = process_id;
         }
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
 
         MPI_Send(&task, sizeof(task), MPI_BYTE, receive_process_id, RESPONSE_TAG, MPI_COMM_WORLD);
     } 
@@ -277,9 +277,9 @@ int main(int argc, char **argv) {
 
     task_queue = task_queue_create(TASK_COUNT);
 
-    pthread_mutex_init(&mutex, NULL);
-    pthread_cond_init(&worker_cond, NULL);
-    pthread_cond_init(&receiver_cond, NULL);
+    // pthread_mutex_init(&mutex, NULL);
+    // pthread_cond_init(&worker_cond, NULL);
+    // pthread_cond_init(&receiver_cond, NULL);
 
     start_time = MPI_Wtime();
     pthread_create(&worker_thread, NULL, worker_start, NULL);
@@ -291,17 +291,21 @@ int main(int argc, char **argv) {
     // pthread_join(sender_thread, NULL);
     end_time = MPI_Wtime();
 
+    double time = end_time - start_time;
+    double finalTime = 0;
+	MPI_Reduce(&time, &finalTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
     MPI_Barrier(MPI_COMM_WORLD);
     printf("Summary weight %d: %d\n", process_id, process_sum_weight);
     MPI_Barrier(MPI_COMM_WORLD);
     if (process_id == 0) {
-        printf("Time: %lf\n", end_time - start_time);
+        printf("Time: %lf\n", finalTime);
     }
     
     task_queue_destroy(&task_queue);
-    pthread_mutex_destroy(&mutex);
-    pthread_cond_destroy(&worker_cond);
-    pthread_cond_destroy(&receiver_cond);
+    // pthread_mutex_destroy(&mutex);
+    // pthread_cond_destroy(&worker_cond);
+    // pthread_cond_destroy(&receiver_cond);
     MPI_Finalize();
 
     return EXIT_SUCCESS;
