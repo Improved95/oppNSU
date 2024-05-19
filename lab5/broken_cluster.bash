@@ -2,8 +2,8 @@
 # cmake ../ && make && mpiexec -np 8 ./cluster
 # make  && mpiexec -np 8 ./cluster
 
-rm cluster.out
+rm broken_cluster.out
 clear
 
-mpicc cluster.c -lm -Wall -Werror -Wextra -O2 -o cluster.out
-mpiexec -n 1 ./cluster.out
+mpicc broken_cluster.c -lm -Wall -Werror -Wextra -O2 -o broken_cluster.out
+mpiexec -n 8 ./broken_cluster.out

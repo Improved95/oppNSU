@@ -144,13 +144,13 @@ static inline void execute_tasks() {
     while (true) {
         Task task;
 
-        pthread_mutex_lock(&mutex);
+        // pthread_mutex_lock(&mutex);
         if (task_queue_is_empty(task_queue)) {
-            pthread_mutex_unlock(&mutex);
+            // pthread_mutex_unlock(&mutex);
             break;
         }
         task_queue_pop(task_queue, &task);
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
 
         for (int i = 0; i < task.weight; ++i) {
             for (int j = 0; j < 180; ++j) {
@@ -165,20 +165,21 @@ void *worker_start() {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    while (true) {
-        execute_tasks();
-        pthread_mutex_lock(&mutex);
-        while (task_queue_is_empty(task_queue) && !termination) {
-            // pthread_cond_signal(&receiver_cond);
-            // pthread_cond_wait(&worker_cond, &mutex);
-        }
+    execute_tasks();
 
-        if (termination) {
-            pthread_mutex_unlock(&mutex);
-            break;
-        }
-        pthread_mutex_unlock(&mutex);
-    }
+    // while (true) {
+    //     pthread_mutex_lock(&mutex);
+    //     while (task_queue_is_empty(task_queue)) {
+    //         pthread_cond_signal(&receiver_cond);
+    //         pthread_cond_wait(&worker_cond, &mutex);
+    //     }
+
+    //     if (termination) {
+    //         pthread_mutex_unlock(&mutex);
+    //         break;
+    //     }
+    //     pthread_mutex_unlock(&mutex);
+    // }
 
     printf("Worker %d finished\n", process_id);
     pthread_exit(NULL);
