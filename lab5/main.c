@@ -48,6 +48,11 @@ int main() {
     pthread_cond_init(&worker_cond, NULL);
     pthread_cond_init(&receiver_cond, NULL);
 
+    start_time = MPI_Wtime();
+    pthread_create(&worker_thread, NULL, worker_start, NULL);
+    pthread_create(&receiver_thread, NULL, receiver_start, NULL);
+    pthread_create(&sender_thread, NULL, sender_start, NULL);
+
     pthread_join(worker_thread, NULL);
     pthread_join(receiver_thread, NULL);
     pthread_join(sender_thread, NULL);
@@ -59,7 +64,7 @@ int main() {
     if (process_id == 0) {
         printf(FGREEN"Time: %lf\n"FNORM, end_time - start_time);
     }
-
+    
     task_queue_destroy(&task_queue);
     pthread_mutex_destroy(&mutex);
     pthread_cond_destroy(&worker_cond);
