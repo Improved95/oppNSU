@@ -6,4 +6,4 @@ rm cluster.out
 clear
 
 mpicc cluster.c -lm -Wall -Werror -Wextra -O2 -o cluster.out
-mpiexec -n 8 ./cluster.out
+mpiexec -n 16 ./cluster.out
