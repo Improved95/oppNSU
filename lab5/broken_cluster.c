@@ -111,7 +111,7 @@ void task_queue_destroy(Task_Queue **task_queue) {
 #define TERMINATION_SIGNAL      (-2)
 
 static int process_id, process_count;
-static int process_sum_weight;
+static int process_start_sum_weight;
 bool termination = false;
 Task_Queue *task_queue;
 
@@ -135,7 +135,7 @@ static inline void init_tasks() {
         if (i % process_count == process_id) {
             task_queue_push(task_queue, task);
             task_id++;
-            process_sum_weight += task.weight;
+            process_start_sum_weight += task.weight;
         }
     }
 }
@@ -296,7 +296,7 @@ int main(int argc, char **argv) {
 	MPI_Reduce(&time, &finalTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    printf("Summary weight %d: %d\n", process_id, process_sum_weight);
+    printf("Summary weight %d: %d\n", process_id, process_start_sum_weight);
     MPI_Barrier(MPI_COMM_WORLD);
     if (process_id == 0) {
         printf("Time: %lf\n", finalTime);
