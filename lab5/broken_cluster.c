@@ -103,7 +103,7 @@ void task_queue_destroy(Task_Queue **task_queue) {
 
 /* TASK QUEUE */
 
-#define TASK_COUNT              16000
+#define TASK_COUNT              10000
 #define TOTAL_SUM_WEIGHT        47000000
 #define REQUEST_TAG             0
 #define RESPONSE_TAG            1
